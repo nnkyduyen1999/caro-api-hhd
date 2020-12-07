@@ -24,12 +24,12 @@ module.exports = {
       isOnline: false,
       isAdmin: false
     });
-    console.log(user);
+    
     try {
       const savedUser = await user.save();
       res.send({ message: "Signup successfully!" });
     } catch (err) {
-      res.status(400).send(err);
+      res.status(400).send({ message: err });
     }
   },
 };
