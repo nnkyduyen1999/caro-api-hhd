@@ -37,7 +37,7 @@ module.exports = {
   login: async (req, res, next) => {
     const existedUser = await User.findOne({ username: req.body.username });
     if (!existedUser) {
-      return res.status(400).send("User not found");
+      return res.status(201).send({errMsg: "User not found"});
     }
 
     const validPass = await bcrypt.compare(
@@ -45,7 +45,7 @@ module.exports = {
       existedUser.password
     );
     if (!validPass) {
-      return res.status(400).send("Invalid password");
+      return res.status(201).send({errMsg:"Invalid password"});
     }
 
     const token = jwt.sign({ _id: existedUser._id }, process.env.SECRET_TOKEN);
