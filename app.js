@@ -9,8 +9,6 @@ const cors = require('cors')
 const dotenv = require("dotenv");
 dotenv.config();
 
-const authApi = require("./components/auth/authApi");
-
 const app = express();
 
 // view engine setup
@@ -24,7 +22,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/", authApi);
+app.use("/", require("./components/auth/authApi"));
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

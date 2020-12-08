@@ -25,7 +25,7 @@ module.exports = {
       isOnline: false,
       isAdmin: false,
     });
-    
+
     try {
       const savedUser = await user.save();
       res.send({ message: "Signup successfully!" });
@@ -33,7 +33,6 @@ module.exports = {
       res.status(400).send({ message: err });
     }
   },
-
   login: async (req, res, next) => {
     const existedUser = await User.findOne({ username: req.body.username });
     if (!existedUser) {
@@ -43,6 +42,46 @@ module.exports = {
     const validPass = await bcrypt.compare(
       req.body.password,
       existedUser.password
+    );
+    if (!validPass) {
+      return res.status(201).send({errMsg:"Invalid password"});
+    }
+
+    const token = jwt.sign({ _id: existedUser._id }, process.env.SECRET_TOKEN);
+    res.header("auth-token", token).json({
+      userInfo: existedUser,
+      token: token,
+    });
+  },
+  loginGoogle: async (req, res, next) => {
+    const existedUser = await User.findOne({ username: req.body.username });
+    if (!existedUser) {
+      return res.status(201).send({errMsg: "User not found"});
+    }
+
+    const validPass = await bcrypt.compare(
+        req.body.password,
+        existedUser.password
+    );
+    if (!validPass) {
+      return res.status(201).send({errMsg:"Invalid password"});
+    }
+
+    const token = jwt.sign({ _id: existedUser._id }, process.env.SECRET_TOKEN);
+    res.header("auth-token", token).json({
+      _id: existedUser._id,
+      token: token,
+    });
+  },
+  loginFacebook: async (req, res, next) => {
+    const existedUser = await User.findOne({ username: req.body.username });
+    if (!existedUser) {
+      return res.status(201).send({errMsg: "User not found"});
+    }
+
+    const validPass = await bcrypt.compare(
+        req.body.password,
+        existedUser.password
     );
     if (!validPass) {
       return res.status(201).send({errMsg:"Invalid password"});
