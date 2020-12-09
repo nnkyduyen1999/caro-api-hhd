@@ -7,6 +7,7 @@
 var app = require('../app');
 var debug = require('debug')('caro-api-hhd:server');
 var http = require('http');
+var socketfunc = require('../socket.io/socket.io')
 
 /**
  * Get port from environment and store in Express.
@@ -20,6 +21,18 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
+
+/**
+ * Create socket io.
+ */
+var io = require('socket.io')(server, {
+  cors: {
+    origin: process.env.ALLOW_ACCESS,
+    credentials: true
+  }
+});
+io.on('connection', socket => socketfunc(io, socket));
+
 
 /**
  * Listen on provided port, on all network interfaces.
