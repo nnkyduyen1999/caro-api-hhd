@@ -54,19 +54,19 @@ module.exports = {
         });
     },
     loginGoogle: async (req, res, next) => {
-        const {profile} = req.body;
-        const user = await User.findOne({email: profile.email});
+        const {email, googleId, givenName, familyName} = req.body;
+        let user = await User.findOne({email});
         if (!user) {
             const newUser = new User({
-                username: profile.email.split('@')[0],
+                username: email.split('@')[0],
                 password: "",
-                email: profile.email,
+                email: email,
                 phoneNumber: "",
-                firstName: profile.givenName,
-                lastName: profile.familyName,
+                firstName: givenName,
+                lastName: familyName,
                 isOnline: false,
                 isAdmin: false,
-                googleID: profile.googleId
+                googleID: googleId
             });
             try {
                 const savedUser = await newUser.save();
@@ -81,11 +81,10 @@ module.exports = {
                 return res.status(500);
             }
         }
-
         try {
             console.log("exist user", user);
             if(!user.googleID)
-                User.updateOne({_id: user._id}, {googleID: profile.googleId})
+                user = await User.updateOne({_id: user._id}, {googleID: googleId})
             const token = jwt.sign({_id: user._id}, process.env.SECRET_TOKEN);
             res.header("auth-token", token).json({
                 userInfo: user,
@@ -96,23 +95,45 @@ module.exports = {
         }
     },
     loginFacebook: async (req, res, next) => {
-        const existedUser = await User.findOne({username: req.body.username});
-        if (!existedUser) {
-            return res.status(201).send({errMsg: "User not found"});
+        const {email, facebookId, givenName, familyName} = req.body;
+        console.log(facebookId);
+        let user = await User.findOne({email});
+        if (!user) {
+            const newUser = new User({
+                username: email.split('@')[0],
+                password: "",
+                email: email,
+                phoneNumber: "",
+                firstName: givenName,
+                lastName: familyName,
+                isOnline: false,
+                isAdmin: false,
+                facebookID: facebookId
+            });
+            try {
+                const savedUser = await newUser.save();
+                console.log("savedUser", savedUser);
+                const token = jwt.sign({_id: savedUser._id}, process.env.SECRET_TOKEN);
+                return res.header("auth-token", token).status(200).json({
+                    userInfo: savedUser,
+                    token
+                });
+            } catch (err) {
+                console.log(err);
+                return res.status(500);
+            }
         }
-
-        const validPass = await bcrypt.compare(
-            req.body.password,
-            existedUser.password
-        );
-        if (!validPass) {
-            return res.status(201).send({errMsg: "Invalid password"});
+        try {
+            if(!user.facebookID) {
+                user = await User.updateOne({_id: user._id}, {facebookID: facebookId})
+            }
+            const token = jwt.sign({_id: user._id}, process.env.SECRET_TOKEN);
+            res.header("auth-token", token).json({
+                userInfo: user,
+                token: token,
+            });
+        } catch (err) {
+            res.status(500);
         }
-
-        const token = jwt.sign({_id: existedUser._id}, process.env.SECRET_TOKEN);
-        res.header("auth-token", token).json({
-            _id: existedUser._id,
-            token: token,
-        });
     },
 };
