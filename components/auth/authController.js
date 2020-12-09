@@ -50,7 +50,7 @@ module.exports = {
 
     const token = jwt.sign({ _id: existedUser._id }, process.env.SECRET_TOKEN);
     res.header("auth-token", token).json({
-      _id: existedUser._id,
+      userId: existedUser._id,
       token: token,
     });
   },
