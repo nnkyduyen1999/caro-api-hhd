@@ -1,4 +1,4 @@
-var onlineUsers = [] 
+let onlineUsers = []
 
 module.exports = (io, socket) => {
 

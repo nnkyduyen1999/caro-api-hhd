@@ -27,7 +27,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", authApi);
 app.use("/user", userApi);
-
+app.use("/game", require('./components/game/gameApi'));
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
     next(createError(404));
