@@ -31,13 +31,13 @@ module.exports = (io, socket) => {
     if (matchingUsers.length >= 1) {
       //create room
       const createdRoom = await roomDAL.insert(matchingUsers[0].userId, user._id);
-      const roomId = createdRoom._id;
+      // const roomId = createdRoom._id;
       
       //send message to users
       socket.broadcast
         .to(matchingUsers[0].socketId)
-        .emit("successfullyMatched", roomId);
-      socket.emit("successfullyMatched", roomId);
+        .emit("successfullyMatched", createdRoom);
+      socket.emit("successfullyMatched", createdRoom);
       matchingUsers.shift();
 
     } else {
@@ -53,6 +53,11 @@ module.exports = (io, socket) => {
 
   socket.on('joinRoom', roomId => {
     socket.join(roomId)
+  })
+
+  socket.on('requestMove', data => {
+    console.log('req', data, data.roomId)
+    io.to(data.roomId).emit('acceptedMove', data)
   })
 
   socket.on("disconnect", (user) => {
