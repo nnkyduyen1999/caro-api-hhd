@@ -1,4 +1,7 @@
-let onlineUsers = []
+const roomDAL = require("../components/room/roomDAL");
+
+let onlineUsers = [];
+let matchingUsers = [];
 const NEW_CHAT_MESSAGE_EVENT = "newChatMessage";
 
 module.exports = (io, socket) => {
@@ -12,20 +15,55 @@ module.exports = (io, socket) => {
   });
 
   //listen for new connection
-  socket.on('new-connection', (user) => {
-    if (!onlineUsers.some(item => item._id === user._id)) {
-      onlineUsers.push(user)
-      io.emit('update-online-users', onlineUsers)
+  socket.on("new-connection", (user) => {
+    if (!onlineUsers.some((item) => item.userId === user._id)) {
+      onlineUsers.push({
+        userId: user._id,
+        socketId: socket.id,
+        username: user.username,
+      });
+      io.emit("update-online-users", onlineUsers);
     }
+  });
+
+  socket.on("matching", async (user) => {
+
+    if (matchingUsers.length >= 1) {
+      //create room
+      const createdRoom = await roomDAL.insert(matchingUsers[0].userId, user._id);
+      const roomId = createdRoom._id;
+      
+      //send message to users
+      socket.broadcast
+        .to(matchingUsers[0].socketId)
+        .emit("successfullyMatched", roomId);
+      socket.emit("successfullyMatched", roomId);
+      matchingUsers.shift();
+
+    } else {
+      if (!matchingUsers.some((item) => item._id === user._id)) {
+        matchingUsers.push({
+          userId: user._id,
+          socketId: socket.id,
+          username: user.username,
+        });
+      }
+    }
+  });
+
+  socket.on('joinRoom', roomId => {
+    socket.join(roomId)
   })
 
-  socket.on('disconnect', (user) => {
-    if (!onlineUsers.some(item => item._id === user._id)) {
-      const temp = onlineUsers.filter(item => item._id !== user._id)
-      onlineUsers = [...temp]
-      io.emit('update-online-users', onlineUsers)
+  socket.on("disconnect", (user) => {
+    if (onlineUsers.some((item) => item._id === user._id)) {
+      const temp = onlineUsers.filter((item) => item._id !== user._id);
+      onlineUsers = [...temp];
+      io.emit("update-online-users", onlineUsers);
     }
     // Leave the room if the user closes the socket
     socket.leave(roomId);
-  })
+  });
 };
+
+
