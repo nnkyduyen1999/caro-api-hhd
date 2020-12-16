@@ -27,19 +27,28 @@ module.exports = (io, socket) => {
   });
 
   socket.on("matching", async (user) => {
-
     if (matchingUsers.length >= 1) {
       //create room
-      const createdRoom = await roomDAL.insert(matchingUsers[0].userId, user._id);
-      // const roomId = createdRoom._id;
-      
+      const createdRoom = await roomDAL.insert(
+        matchingUsers[0].userId,
+        user._id
+      );
+
+      data = {
+        _id: createdRoom._id,
+        userXId: createdRoom.userXId,
+        usernameX: matchingUsers[0].username,
+        userOId: createdRoom.userOId,
+        usernameO: user.username,
+      };
+
       //send message to users
       socket.broadcast
         .to(matchingUsers[0].socketId)
-        .emit("successfullyMatched", createdRoom);
-      socket.emit("successfullyMatched", createdRoom);
-      matchingUsers.shift();
+        .emit("successfullyMatched", data);
+      socket.emit("successfullyMatched", data);
 
+      matchingUsers.shift();
     } else {
       if (!matchingUsers.some((item) => item._id === user._id)) {
         matchingUsers.push({
@@ -51,14 +60,14 @@ module.exports = (io, socket) => {
     }
   });
 
-  socket.on('joinRoom', roomId => {
-    socket.join(roomId)
-  })
+  socket.on("joinRoom", (roomId) => {
+    socket.join(roomId);
+  });
 
-  socket.on('requestMove', data => {
-    console.log('req', data, data.roomId)
-    io.to(data.roomId).emit('acceptedMove', data)
-  })
+  socket.on("requestMove", (data) => {
+    console.log("req", data, data.roomId);
+    io.to(data.roomId).emit("acceptedMove", data);
+  });
 
   socket.on("disconnect", (user) => {
     if (onlineUsers.some((item) => item._id === user._id)) {
@@ -70,5 +79,3 @@ module.exports = (io, socket) => {
     socket.leave(roomId);
   });
 };
-
-
