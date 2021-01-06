@@ -71,13 +71,13 @@ module.exports = (io, socket) => {
         io.in(data.roomId).emit(GIVEN_IN_EVENT, data);
     });
 
-    socket.on("disconnect", (user) => {
-        if (onlineUsers.some((item) => item._id === user._id)) {
-            const temp = onlineUsers.filter((item) => item._id !== user._id);
-            onlineUsers = [...temp];
-            io.emit("update-online-users", onlineUsers);
-        }
-        // Leave the room if the user closes the socket
-        socket.leave(roomId);
-    });
+    // socket.on("disconnect", (user) => {
+    //     if (onlineUsers.some((item) => item._id === user._id)) {
+    //         const temp = onlineUsers.filter((item) => item._id !== user._id);
+    //         onlineUsers = [...temp];
+    //         io.emit("update-online-users", onlineUsers);
+    //     }
+    //     // Leave the room if the user closes the socket
+    //     socket.leave(roomId);
+    // });
 };
