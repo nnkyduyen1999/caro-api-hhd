@@ -19,11 +19,8 @@ module.exports = {
             username: req.body.username,
             password: hashedPassword,
             email: req.body.email,
-            phoneNumber: req.body.phoneNumber,
             firstName: req.body.firstName,
             lastName: req.body.lastName,
-            isOnline: false,
-            isAdmin: false,
         });
 
         try {
