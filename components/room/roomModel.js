@@ -15,6 +15,18 @@ const roomSchema = new Schema({
         type: Number,
         default: 60
     },
+    xCurrentPlayer: {
+        type: mongoose.Types.ObjectId,
+        ref: 'User',
+    },
+    oCurrentPlayer: {
+        type: mongoose.Types.ObjectId,
+        ref: 'User',
+    },
+    isPlaying: {
+        type: Boolean,
+        default: false
+    }
 });
 
 module.exports = mongoose.model("Room", roomSchema);
