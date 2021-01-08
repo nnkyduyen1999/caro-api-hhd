@@ -14,6 +14,16 @@ module.exports = {
     }
   },
 
+  // testRoom: async (req, res, next) => {
+  //   try {
+  //     // const createdRoom = await Room.create(room);
+  //     const createdRoom = await Room.create({});
+  //     res.send({createdRoom})
+  //   } catch (err) {
+  //     res.send({err})
+  //   }
+  // },
+
   loadById: async (id) => {
     try {
       const room = await Room.findById(id);

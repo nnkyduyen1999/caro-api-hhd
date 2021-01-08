@@ -3,14 +3,18 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const roomSchema = new Schema({
-    userXId: {
-        type: mongoose.Types.ObjectId,
-        ref: 'User'
+    createTime: {
+        type: Date,
+        default: Date.now
     },
-    userOId: {
-        type: mongoose.Types.ObjectId,
-        ref: 'User'
-    }
+    password: {
+        type: String,
+        default: ''
+    },
+    timeStep: {
+        type: Number,
+        default: 60
+    },
 });
 
-module.exports = mongoose.model("room", roomSchema);
+module.exports = mongoose.model("Room", roomSchema);
