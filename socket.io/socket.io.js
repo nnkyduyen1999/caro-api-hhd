@@ -2,6 +2,7 @@ const roomDAL = require("../components/room/roomDAL");
 
 let onlineUsers = [];
 let matchingUsers = [];
+let createdRooms = [];
 const NEW_CHAT_MESSAGE_EVENT = "newChatMessage";
 const GIVEN_IN_EVENT = "give-in"
 module.exports = (io, socket) => {
@@ -15,6 +16,12 @@ module.exports = (io, socket) => {
             });
             io.emit("update-online-users", onlineUsers);
         }
+
+        //listening for creating room
+        socket.on("createRoom", data => {
+            createdRooms.push(data);
+            io.sockets.emit("newRoomCreated", createdRooms);
+        });
     });
 
     socket.on("matching", async (user) => {
