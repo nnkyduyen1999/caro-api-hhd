@@ -5,26 +5,30 @@ const Schema = mongoose.Schema;
 const gameSchema = new Schema({
     xPlayer: {
         type: mongoose.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
     },
     oPlayer: {
         type: mongoose.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
     },
     roomId: {
         type: mongoose.Types.ObjectId,
-        ref: 'Room'
+        ref: 'Room',
+        required: true
     },
     createTime: {
         type: Date,
         default: Date.now
     },
     history: {
-        type: [{squares: [], location: Number, chat: []}],
-        default: [{squares: [], location: Number, chat: []}]
+        type: [],
     },
-    winningLine: [Number],
-    winner: String,
+    winningLine: {
+        type: []
+    },
+    winner: {
+        type: String,
+    },
     isFinish: {
         type: Boolean,
         default: false

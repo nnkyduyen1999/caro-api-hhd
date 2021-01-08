@@ -4,4 +4,5 @@ const gameController = require('./gameController')
 
 router.get('/:id', gameController.getGameById);
 
+// router.post('/', gameController.testGame);
 module.exports = router
