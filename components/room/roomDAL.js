@@ -14,6 +14,20 @@ module.exports = {
     }
   },
 
+  addToDB: async (dataFromSocket) => {
+    try {
+      const room = {
+        password: dataFromSocket.password,
+        timeStep: dataFromSocket.timeStep,
+        xCurrentPlayer: dataFromSocket.userId,
+        isPlaying: false
+      }
+      return await Room.create(room);
+    } catch (err) {
+      return { message: err.message };
+    }
+  }, 
+
   // testRoom: async (req, res, next) => {
   //   try {
   //     // const createdRoom = await Room.create(room);

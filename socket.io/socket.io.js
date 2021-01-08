@@ -17,13 +17,17 @@ module.exports = (io, socket) => {
             io.emit("update-online-users", onlineUsers);
         }
 
-        //listening for creating room
-        socket.on("createRoom", data => {
-            createdRooms.push(data);
-            io.sockets.emit("newRoomCreated", createdRooms);
-        });
+        
     });
 
+    //listening for creating room
+    socket.on("createRoom", async data => {
+        const roomToDB = await roomDAL.addToDB(data);
+        createdRooms.push(roomToDB);
+        io.sockets.emit("newRoomCreated", createdRooms);
+        socket.emit("inWaiting", roomToDB);
+    });
+    
     socket.on("matching", async (user) => {
         if (matchingUsers.length >= 1) {
             //create room
