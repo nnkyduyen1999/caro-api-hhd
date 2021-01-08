@@ -1,6 +1,12 @@
 const Room = require("./roomModel");
 
 module.exports = {
+  all: () => {
+    return Room.find({})
+  },
+
+
+  //------------------------------
   insert: async (userXId, userOId) => {
     try {
       const room = {

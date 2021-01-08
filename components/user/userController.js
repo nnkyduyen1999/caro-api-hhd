@@ -1,4 +1,3 @@
-// const User = require('./userModel')
 const UserDAL = require("./userDAL");
 
 module.exports = {
