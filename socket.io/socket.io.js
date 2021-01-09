@@ -1,27 +1,41 @@
 const roomDAL = require("../components/room/roomDAL");
 const userDAL = require("../components/user/userDAL");
 const { TROPHY_RANGE } = require("../global/constant");
+const {
+  UPDATE_ONLINE_USERS,
+  GIVEN_IN_EVENT,
+  NEW_CHAT_MESSAGE_EVENT,
+  MATCHING,
+  SUCCESSFULLY_MATCHED,
+  JOIN_ROOM,
+  REQUEST_MOVE,
+  ACCEPT_MOVE,
+  DISCONNECT,
+  CREATE_ROOM,
+  NEW_ROOM_CREATED,
+  IN_WAITING,
+  NEW_CONNECT
+} = require("./socket-event");
 
 let onlineUsers = [];
 let matchingUsers = [];
 
 let createdRooms = [];
-const NEW_CHAT_MESSAGE_EVENT = "newChatMessage";
-const GIVEN_IN_EVENT = "give-in";
+
 module.exports = (io, socket) => {
   //listen for new connection
-  socket.on("new-connection", async (userId) => {
+  socket.on(NEW_CONNECT, async (userId) => {
     if (!onlineUsers.some((item) => item.userId === userId)) {
       onlineUsers.push({
         userId: userId,
         socketId: socket.id,
       });
       await userDAL.updateOnlineStatus(userId, true);
-      io.emit("update-online-users");
+      io.emit(UPDATE_ONLINE_USERS);
     }
   });
 
-  socket.on("matching", async (user) => {
+  socket.on(MATCHING, async (user) => {
     if (matchingUsers.length >= 1) {
       //there are users matching before
 
@@ -39,7 +53,8 @@ module.exports = (io, socket) => {
             item.trophy - TROPHY_RANGE,
             user.trophy,
             item.trophy + TROPHY_RANGE,
-            item.trophy, TROPHY_RANGE
+            item.trophy,
+            TROPHY_RANGE
           );
 
           return (
@@ -57,8 +72,8 @@ module.exports = (io, socket) => {
 
           socket.broadcast
             .to(matchingUsers[matchIndex].socketId)
-            .emit("successfullyMatched", createdRoom._id);
-          socket.emit("successfullyMatched", createdRoom._id);
+            .emit(SUCCESSFULLY_MATCHED, createdRoom._id);
+          socket.emit(SUCCESSFULLY_MATCHED, createdRoom._id);
 
           matchingUsers.splice(matchIndex, 1);
         } else {
@@ -66,7 +81,7 @@ module.exports = (io, socket) => {
             _id: user._id,
             socketId: socket.id,
             trophy: user.trophy,
-           });
+          });
         }
       }
     } else {
@@ -75,27 +90,27 @@ module.exports = (io, socket) => {
         _id: user._id,
         socketId: socket.id,
         trophy: user.trophy,
-       });
+      });
     }
   });
 
   //listening for creating room
-  socket.on("createRoom", async (data) => {
+  socket.on(CREATE_ROOM, async (data) => {
     const roomToDB = await roomDAL.addToDB(data);
     createdRooms.push(roomToDB);
     //io.sockets.emit("newRoomCreated", createdRooms);
-    io.emit("newRoomCreated");
-    socket.emit("inWaiting", roomToDB);
+    io.emit(NEW_ROOM_CREATED);
+    socket.emit(IN_WAITING, roomToDB);
   });
 
   //Join a room
-  socket.on("joinRoom", (roomId) => {
+  socket.on(JOIN_ROOM, (roomId) => {
     socket.join(roomId);
   });
 
-  socket.on("requestMove", (data) => {
+  socket.on(REQUEST_MOVE, (data) => {
     // console.log("req", data, data.roomId);
-    io.to(data.roomId).emit("acceptedMove", data);
+    io.to(data.roomId).emit(ACCEPT_MOVE, data);
   });
 
   // Listen for new messages
@@ -108,7 +123,7 @@ module.exports = (io, socket) => {
     io.in(data.roomId).emit(GIVEN_IN_EVENT, data);
   });
 
-  socket.on("disconnect", async () => {
+  socket.on(DISCONNECT, async () => {
     const user = onlineUsers.find((item) => item.socketId === socket.id);
     if (user) {
       await userDAL.updateOnlineStatus(user.userId, false);
@@ -116,7 +131,7 @@ module.exports = (io, socket) => {
 
     const temp = onlineUsers.filter((item) => item.socketId !== socket.id);
     onlineUsers = [...temp];
-    io.emit("update-online-users");
+    io.emit(UPDATE_ONLINE_USERS);
 
     // Leave the room if the user closes the socket
     // socket.leave(roomId);
