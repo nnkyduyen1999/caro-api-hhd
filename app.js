@@ -5,15 +5,13 @@ const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const passport = require("passport");
 
 const dotenv = require("dotenv");
 dotenv.config();
 
-const authApi = require("./components/auth/authApi");
-const userApi = require("./components/user/userApi");
-
 const app = express();
-
+require('./config/passport')
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "hbs");
@@ -25,11 +23,11 @@ app.use(express.urlencoded({extended: false}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/", authApi);
-app.use("/user", userApi);
-app.use("/game", require('./components/game/gameApi'));
-app.use("/chat", require('./components/chat/chatApi'));
-app.use("/room", require('./components/room/roomApi'));
+app.use("/", require("./components/auth/authApi"));
+app.use("/user", passport.authenticate('jwt', {session: false}), require("./components/user/userApi"));
+app.use("/game", passport.authenticate('jwt', {session: false}), require('./components/game/gameApi'));
+app.use("/chat", passport.authenticate('jwt', {session: false}), require('./components/chat/chatApi'));
+app.use("/room", passport.authenticate('jwt', {session: false}), require('./components/room/roomApi'));
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
