@@ -4,6 +4,7 @@ const userDAL = require("../components/user/userDAL");
 let onlineUsers = [];
 let matchingUsers = [];
 
+let createdRooms = [];
 const NEW_CHAT_MESSAGE_EVENT = "newChatMessage";
 const GIVEN_IN_EVENT = "give-in";
 module.exports = (io, socket) => {
@@ -17,7 +18,6 @@ module.exports = (io, socket) => {
       await userDAL.updateOnlineStatus(userId, true);
       io.emit("update-online-users");
     }
-    
   });
 
   socket.on("matching", async (user) => {
@@ -52,6 +52,15 @@ module.exports = (io, socket) => {
         });
       }
     }
+  });
+
+  //listening for creating room
+  socket.on("createRoom", async (data) => {
+    const roomToDB = await roomDAL.addToDB(data);
+    createdRooms.push(roomToDB);
+    //io.sockets.emit("newRoomCreated", createdRooms);
+    io.emit("newRoomCreated");
+    socket.emit("inWaiting", roomToDB);
   });
 
   //Join a room
