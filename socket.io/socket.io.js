@@ -1,5 +1,6 @@
 const roomDAL = require("../components/room/roomDAL");
 const userDAL = require("../components/user/userDAL");
+const { TROPHY_RANGE } = require("../global/constant");
 
 let onlineUsers = [];
 let matchingUsers = [];
@@ -22,35 +23,59 @@ module.exports = (io, socket) => {
 
   socket.on("matching", async (user) => {
     if (matchingUsers.length >= 1) {
-      //create room
-      const createdRoom = await roomDAL.insert(
-        matchingUsers[0].userId,
-        user._id
+      //there are users matching before
+
+      // check user already have matching or not
+      const userIndex = matchingUsers.findIndex(
+        (item) => item._id === user._id
       );
 
-      data = {
-        _id: createdRoom._id,
-        userXId: createdRoom.userXId,
-        usernameX: matchingUsers[0].username,
-        userOId: createdRoom.userOId,
-        usernameO: user.username,
-      };
+      if (userIndex !== -1) {
+        matchingUsers[userIndex].socketId = socket.id;
+      } else {
+        //find matching users with same trophy range
+        const matchIndex = matchingUsers.findIndex((item) => {
+          console.log(
+            item.trophy - TROPHY_RANGE,
+            user.trophy,
+            item.trophy + TROPHY_RANGE,
+            item.trophy, TROPHY_RANGE
+          );
 
-      //send message to users
-      socket.broadcast
-        .to(matchingUsers[0].socketId)
-        .emit("successfullyMatched", data);
-      socket.emit("successfullyMatched", data);
-
-      matchingUsers.shift();
-    } else {
-      if (!matchingUsers.some((item) => item._id === user._id)) {
-        matchingUsers.push({
-          userId: user._id,
-          socketId: socket.id,
-          username: user.username,
+          return (
+            item.trophy - TROPHY_RANGE <= user.trophy &&
+            user.trophy <= item.trophy + TROPHY_RANGE
+          );
         });
+
+        if (matchIndex !== -1) {
+          //create room
+          const createdRoom = await roomDAL.insert(
+            matchingUsers[matchIndex].userId,
+            user._id
+          );
+
+          socket.broadcast
+            .to(matchingUsers[matchIndex].socketId)
+            .emit("successfullyMatched", createdRoom._id);
+          socket.emit("successfullyMatched", createdRoom._id);
+
+          matchingUsers.splice(matchIndex, 1);
+        } else {
+          matchingUsers.push({
+            _id: user._id,
+            socketId: socket.id,
+            trophy: user.trophy,
+           });
+        }
       }
+    } else {
+      //there is no user matching yet
+      matchingUsers.push({
+        _id: user._id,
+        socketId: socket.id,
+        trophy: user.trophy,
+       });
     }
   });
 
