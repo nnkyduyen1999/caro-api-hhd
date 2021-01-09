@@ -58,13 +58,12 @@ module.exports = {
                 username: email.split('@')[0],
                 password: "",
                 email: email,
-                phoneNumber: "",
                 firstName: givenName,
                 lastName: familyName,
-                isOnline: false,
-                isAdmin: false,
-                googleID: googleId
+                googleId: googleId,
+                isValidate: true
             });
+
             try {
                 const savedUser = await newUser.save();
                 console.log("savedUser", savedUser);
@@ -80,8 +79,8 @@ module.exports = {
         }
         try {
             console.log("exist user", user);
-            if(!user.googleID)
-                user = await User.updateOne({_id: user._id}, {googleID: googleId})
+            if(!user.googleId)
+                user = await User.updateOne({_id: user._id}, {googleId: googleId})
             const token = jwt.sign({_id: user._id}, process.env.SECRET_TOKEN);
             res.header("auth-token", token).json({
                 userInfo: user,
@@ -100,12 +99,10 @@ module.exports = {
                 username: email.split('@')[0],
                 password: "",
                 email: email,
-                phoneNumber: "",
                 firstName: givenName,
                 lastName: familyName,
-                isOnline: false,
-                isAdmin: false,
-                facebookID: facebookId
+                facebookId: facebookId,
+                isValidate: true
             });
             try {
                 const savedUser = await newUser.save();
@@ -121,8 +118,8 @@ module.exports = {
             }
         }
         try {
-            if(!user.facebookID) {
-                user = await User.updateOne({_id: user._id}, {facebookID: facebookId})
+            if(!user.facebookId) {
+                user = await User.updateOne({_id: user._id}, {facebookId: facebookId})
             }
             const token = jwt.sign({_id: user._id}, process.env.SECRET_TOKEN);
             res.header("auth-token", token).json({
