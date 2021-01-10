@@ -24,4 +24,8 @@ module.exports = {
   NEW_ROOM_CREATED: "newRoomCreated",
 
   IN_WAITING: "inWaiting",
+
+  BECOME_PLAYER: 'becomePlayer',
+
+  UPDATE_CURRENT_PLAYER: 'updateCurrentPlayer'
 };

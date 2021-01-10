@@ -12,14 +12,22 @@ module.exports = {
     );
   },
 
+  updateXCurrentPlayer: (roomId, xPlayerId) => {
+    return Room.findByIdAndUpdate(roomId, { xCurrentPlayer: xPlayerId })
+  },
+
+  updateOCurrentPlayer: (roomId, oPlayerId) => {
+    return Room.findByIdAndUpdate(roomId, { oCurrentPlayer: oPlayerId })
+  },
+
 
 
   //------------------------------
   insert: async (userXId, userOId) => {
     try {
       const room = {
-        userXId: userXId,
-        userOId: userOId,
+        xCurrentPlayer: userXId,
+        oCurrentPlayer: userOId,
       };
       const createdRoom = await Room.create(room);
       return createdRoom;

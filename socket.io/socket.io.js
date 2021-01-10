@@ -14,13 +14,16 @@ const {
   CREATE_ROOM,
   NEW_ROOM_CREATED,
   IN_WAITING,
-  NEW_CONNECT
+  NEW_CONNECT,
+  BECOME_PLAYER,
+  UPDATE_CURRENT_PLAYER
 } = require("./socket-event");
 
 let onlineUsers = [];
 let matchingUsers = [];
 
 let createdRooms = [];
+// let listRoom = [];
 
 module.exports = (io, socket) => {
   //listen for new connection
@@ -49,14 +52,6 @@ module.exports = (io, socket) => {
       } else {
         //find matching users with same trophy range
         const matchIndex = matchingUsers.findIndex((item) => {
-          console.log(
-            item.trophy - TROPHY_RANGE,
-            user.trophy,
-            item.trophy + TROPHY_RANGE,
-            item.trophy,
-            TROPHY_RANGE
-          );
-
           return (
             item.trophy - TROPHY_RANGE <= user.trophy &&
             user.trophy <= item.trophy + TROPHY_RANGE
@@ -66,33 +61,49 @@ module.exports = (io, socket) => {
         if (matchIndex !== -1) {
           //create room
           const createdRoom = await roomDAL.insert(
-            matchingUsers[matchIndex].userId,
+            matchingUsers[matchIndex]._id,
             user._id
           );
+
+          const newRoom = {
+            ...createdRoom._doc,
+            xPlayer: matchingUsers[matchIndex],
+            oPlayer: { ...user, socketId: socket.id}
+          }
+          // listRoom.push(newRoom)
 
           socket.broadcast
             .to(matchingUsers[matchIndex].socketId)
             .emit(SUCCESSFULLY_MATCHED, createdRoom._id);
           socket.emit(SUCCESSFULLY_MATCHED, createdRoom._id);
 
+          io.emit(NEW_ROOM_CREATED);
+
           matchingUsers.splice(matchIndex, 1);
         } else {
           matchingUsers.push({
-            _id: user._id,
+            ...user,
             socketId: socket.id,
-            trophy: user.trophy,
           });
         }
       }
     } else {
       //there is no user matching yet
       matchingUsers.push({
-        _id: user._id,
+        ...user,
         socketId: socket.id,
-        trophy: user.trophy,
       });
     }
   });
+
+  socket.on(BECOME_PLAYER, async (data) => {
+    if (data.player === 'X') {
+      await roomDAL.updateXCurrentPlayer(data.roomId, data.user._id)
+    } else if (data.player === 'O') {
+      await roomDAL.updateOCurrentPlayer(data.roomId, data.user._id)
+    }
+    io.emit(UPDATE_CURRENT_PLAYER, data)
+  })
 
   //listening for creating room
   socket.on(CREATE_ROOM, async (data) => {
