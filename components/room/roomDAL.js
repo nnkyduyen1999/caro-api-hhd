@@ -20,6 +20,14 @@ module.exports = {
     return Room.findByIdAndUpdate(roomId, { oCurrentPlayer: oPlayerId })
   },
 
+  updateXPlayerReady: (roomId, status) => {
+    return Room.findByIdAndUpdate(roomId, { xPlayerReady: status })
+  },
+
+  updateOPlayerReady: (roomId, status) => {
+    return Room.findByIdAndUpdate(roomId, { oPlayerReady: status })
+  },
+
 
 
   //------------------------------

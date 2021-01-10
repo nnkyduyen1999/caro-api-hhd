@@ -9,7 +9,7 @@ const roomSchema = new Schema({
     },
     password: {
         type: String,
-        default: ''
+        // default: ''
     },
     timeStep: {
         type: Number,
@@ -26,7 +26,16 @@ const roomSchema = new Schema({
     isPlaying: {
         type: Boolean,
         default: false
-    }
+    },
+    xPlayerReady: {
+        type: Boolean,
+        default: false
+    },
+    oPlayerReady: {
+        type: Boolean,
+        default: false
+    },
+
 });
 
 module.exports = mongoose.model("Room", roomSchema);

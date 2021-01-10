@@ -27,5 +27,7 @@ module.exports = {
 
   BECOME_PLAYER: 'becomePlayer',
 
-  UPDATE_CURRENT_PLAYER: 'updateCurrentPlayer'
+  UPDATE_CURRENT_PLAYER: 'updateCurrentPlayer',
+
+  UPDATE_READY_STATUS: 'updateReadyStatus'
 };

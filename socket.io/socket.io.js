@@ -16,7 +16,8 @@ const {
   IN_WAITING,
   NEW_CONNECT,
   BECOME_PLAYER,
-  UPDATE_CURRENT_PLAYER
+  UPDATE_CURRENT_PLAYER,
+  UPDATE_READY_STATUS
 } = require("./socket-event");
 
 let onlineUsers = [];
@@ -103,6 +104,16 @@ module.exports = (io, socket) => {
       await roomDAL.updateOCurrentPlayer(data.roomId, data.user._id)
     }
     io.emit(UPDATE_CURRENT_PLAYER, data)
+  })
+
+  socket.on(UPDATE_READY_STATUS, async (data) => {
+    console.log(data)
+    if (data.player === 'X') {
+      await roomDAL.updateXPlayerReady(data.roomId, data.status)
+    } else if (data.player === 'O') {
+      await roomDAL.updateOPlayerReady(data.roomId, data.status)
+    }
+    io.to(data.roomId).emit(UPDATE_READY_STATUS, data)
   })
 
   //listening for creating room
