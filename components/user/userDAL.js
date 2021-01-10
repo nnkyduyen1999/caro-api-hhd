@@ -14,5 +14,5 @@ module.exports = {
 
   loadUsernameById: (id) => {
     return User.findById(id).select("username")
-  }
+  },
 };

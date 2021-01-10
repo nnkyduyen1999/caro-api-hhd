@@ -5,6 +5,14 @@ module.exports = {
     return Room.find({})
   },
 
+  getRoomById: (id) => {
+    return Room.findOne(
+      { _id: id },
+      { password: 0 }
+    );
+  },
+
+
 
   //------------------------------
   insert: async (userXId, userOId) => {
