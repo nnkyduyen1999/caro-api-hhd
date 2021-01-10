@@ -9,5 +9,6 @@ router.post('/signup', authController.signup);
 router.post('/login', authController.login);
 router.post('/login-google', authController.loginGoogle);
 router.post('/login-facebook', authController.loginFacebook);
+router.post('/activate', authController.activateEmail);
 
 module.exports = router;

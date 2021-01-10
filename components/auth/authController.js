@@ -47,7 +47,7 @@ function sendMailTo(user) {
 
     const mailOptions = {
       from: "HHD TEAM <hhdteam@gmail.com>",
-      to: "qui021098@gmail.com",
+      to: user.email,
       subject: "Caro Game: Verify your CaroGame account",
       html: `
         <h3>Please click this link to activate account:</h3>
@@ -85,9 +85,8 @@ module.exports = {
       lastName: req.body.lastName,
     });
 
-    let tokenFromEmail = ``;
     try {
-      //const savedUser = await user.save();
+      const savedUser = await user.save();
       const sentEmailResult = sendMailTo(user);
       if (sentEmailResult.token) {
         res.send({
@@ -210,6 +209,33 @@ module.exports = {
       });
     } catch (err) {
       res.status(500);
+    }
+  },
+  activateEmail: async (req, res, next) => {
+    const { token } = req.body;
+    if (token) {
+      jwt.verify(token, process.env.SECRET_TOKEN, async (err, decoded) => {
+        if (err) {
+          return res
+            .status(401)
+            .json({ message: "Expired link. Sign up again :((" });
+        } else {
+          const { username, email, password } = jwt.decode(token);
+          const updatedUser = await User.findOneAndUpdate(
+            { username: username, email: email },
+            { isValidate: true }
+          );
+          if (updatedUser) {
+            res.json({
+              message: "Email is validated. Now you can login...",
+            });
+          } else {
+            res.json({ message: "Error happening when updating user. Sorry." });
+          }
+        }
+      });
+    } else {
+      res.json({ message: "Error happening, please try again..." });
     }
   },
 };
