@@ -9,6 +9,7 @@ const CLIENT_ID = `251340645881-213o968bvgh776f28e618k8t93obhgnd.apps.googleuser
 const CLIENT_SECRET = `ZCY-BMk8g8GdhRVO-MRe5w_f`;
 const REDIRECT_URL = `https://developers.google.com/oauthplayground`;
 const REFRESH_TOKEN = `1//04U78YabY6AeBCgYIARAAGAQSNwF-L9IryvsLDN7-725ZbiQOk4HhFWnsDBn4j12JKYIJ4sM45108k8_QWpiU4MLIk-ls_ilIYic`;
+const USER_EMAIL = `nnkyduyen1999@gmail.com`;
 
 const oAuth2Client = new google.auth.OAuth2(
   CLIENT_ID,
@@ -17,15 +18,14 @@ const oAuth2Client = new google.auth.OAuth2(
 );
 oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
 
-function sendMailTo(user) {
-  const { username, email, password } = user;
+function sendMailTo(mailOptions) {
   try {
     const accessToken = oAuth2Client.getAccessToken();
     const transport = nodemailer.createTransport({
       service: "gmail",
       auth: {
         type: "OAuth2",
-        user: "nnkyduyen1999@gmail.com",
+        user: USER_EMAIL,
         clientId: CLIENT_ID,
         clientSecret: CLIENT_SECRET,
         refreshToken: REFRESH_TOKEN,
@@ -33,11 +33,43 @@ function sendMailTo(user) {
       },
     });
 
+    const result = transport.sendMail(mailOptions);
+    return {
+      result: result,
+      message: `OK`,
+    };
+  } catch (err) {
+    return err;
+  }
+}
+module.exports = {
+  signup: async (req, res, next) => {
+    const { username, email, password, firstName, lastName } = req.body;
+
+    const usernameExist = await User.findOne({ username: username });
+    if (usernameExist)
+      return res.status(400).send({ message: "Username already exist" });
+
+    const emailExist = await User.findOne({ email: email });
+    if (emailExist)
+      return res.status(400).send({ message: "Email already exist" });
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const user = new User({
+      username: username,
+      password: hashedPassword,
+      email: email,
+      firstName: firstName,
+      lastName: lastName,
+    });
+
     const token = jwt.sign(
       {
         username,
         email,
-        password,
+        hashedPassword,
       },
       process.env.SECRET_TOKEN,
       {
@@ -50,49 +82,21 @@ function sendMailTo(user) {
       to: user.email,
       subject: "Caro Game: Verify your CaroGame account",
       html: `
-        <h3>Please click this link to activate account:</h3>
+        <h3>Please click this link to continue:</h3>
         <p>${process.env.ALLOW_ACCESS}/user/activate/${token}</p>
         <hr/>
       `,
     };
-    const result = transport.sendMail(mailOptions);
-    return {
-      token: token,
-      result: result,
-    };
-  } catch (err) {
-    return err;
-  }
-}
-module.exports = {
-  signup: async (req, res, next) => {
-    const usernameExist = await User.findOne({ username: req.body.username });
-    if (usernameExist)
-      return res.status(400).send({ message: "Username already exist" });
-
-    const emailExist = await User.findOne({ email: req.body.email });
-    if (emailExist)
-      return res.status(400).send({ message: "Email already exist" });
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(req.body.password, salt);
-
-    const user = new User({
-      username: req.body.username,
-      password: hashedPassword,
-      email: req.body.email,
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-    });
 
     try {
       const savedUser = await user.save();
-      const sentEmailResult = sendMailTo(user);
-      if (sentEmailResult.token) {
+      const sentEmailResult = sendMailTo(mailOptions);
+      console.log(sentEmailResult);
+      if (sentEmailResult.message === `OK`) {
         res.send({
           message:
             "Signup successfully! Please check your mail-box to verify email. Thank you...",
-          tokenFromEmail: sentEmailResult.token,
+          tokenFromEmail: token,
         });
       }
     } catch (err) {
@@ -235,4 +239,40 @@ module.exports = {
       res.json({ message: "Error happening, please try again..." });
     }
   },
+  sentMailForgetPassword: async (req, res, next) => {
+    const exitedUser = await User.findOne({ email: req.body.email });
+    if (exitedUser) {
+      try {
+        const { _id, email } = exitedUser;
+        const token = jwt.sign({ _id, email }, process.env.SECRET_TOKEN,
+          {
+            expiresIn: "15m",
+          });
+        const mailOptions = {
+          from: "HHD TEAM <hhdteam@gmail.com>",
+          to: email,
+          subject: "Caro Game: Reset password for your CaroGame account",
+          html: `
+              <h3>Please click this link to continue:</h3>
+              <p>${process.env.ALLOW_ACCESS}/user/reset-password/${token}</p>
+              <hr/>
+            `,
+        };
+        const sentEmailResult = sendMailTo(mailOptions);
+        if (sentEmailResult.message === `OK`) {
+          res.status(200).send({
+            token: token,
+            message: "Email sent. Please check your email to reset password...",
+          });
+        }
+      } catch (err) {
+        res.status(400).send({ message: err.message });
+      }
+    } else {
+      res
+        .status(400)
+        .send({ message: "This email is invalid or not existed." });
+    }
+  },
+  resetPasswordByEmail: async (req, res, next) => {},
 };
