@@ -227,16 +227,18 @@ module.exports = {
             { isValidate: true }
           );
           if (updatedUser) {
-            res.json({
+            res.status(200).json({
               message: "Email is validated. Now you can login...",
             });
           } else {
-            res.json({ message: "Error happening when updating user. Sorry." });
+            res
+              .status(401)
+              .json({ message: "Error happening when updating user. Sorry." });
           }
         }
       });
     } else {
-      res.json({ message: "Error happening, please try again..." });
+      res.status(401).json({ message: "Error happening, please try again..." });
     }
   },
   sentMailForgetPassword: async (req, res, next) => {
@@ -244,10 +246,9 @@ module.exports = {
     if (exitedUser) {
       try {
         const { _id, email } = exitedUser;
-        const token = jwt.sign({ _id, email }, process.env.SECRET_TOKEN,
-          {
-            expiresIn: "15m",
-          });
+        const token = jwt.sign({ _id, email }, process.env.SECRET_TOKEN, {
+          expiresIn: "15m",
+        });
         const mailOptions = {
           from: "HHD TEAM <hhdteam@gmail.com>",
           to: email,
@@ -274,5 +275,41 @@ module.exports = {
         .send({ message: "This email is invalid or not existed." });
     }
   },
-  resetPasswordByEmail: async (req, res, next) => {},
+  resetPasswordByEmail: async (req, res, next) => {
+    const { token, newPassword} = req.body;
+    if (token && newPassword) {
+      try {
+        jwt.verify(token, process.env.SECRET_TOKEN, async (err, decoded) => {
+          if (err) {
+            return res
+              .status(401)
+              .json({ message: "Expired link. Please try again :((" });
+          } else {
+            const { _id } = jwt.decode(token);
+
+            const salt = await bcrypt.genSalt(10);
+            const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+            
+            const updatedUser = await User.findByIdAndUpdate(_id, {
+              password: hashedNewPassword,
+            });
+
+            if (updatedUser) {
+              res.status(200).json({
+                message: "Your password is successfully updated.",
+              });
+            } else {
+              res.status(401).json({
+                message: "Error happening when updating user. Sorry.",
+              });
+            }
+          }
+        });
+      } catch (err) {
+        res.status(400).send({ message: "Error" });
+      }
+    } else {
+      res.status(400).send({ message: "Error happening. Please try again." });
+    }
+  },
 };
