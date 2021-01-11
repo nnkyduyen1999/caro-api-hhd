@@ -6,7 +6,11 @@ router.get('/', roomController.allWithPlayerUsername)
 
 router.get('/:id', roomController.getById)
 
+router.get('/:id/latest-game', roomController.getLatestGameInRoomById)
+
 router.get('/with-player-info/:id', roomController.loadRoomWithPlayerInfoById)
+
+
 
 // router.post('/', roomDAL.testRoom);
 

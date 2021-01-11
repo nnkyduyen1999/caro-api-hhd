@@ -1,3 +1,4 @@
+const gameDAL = require("../components/game/gameDAL");
 const roomDAL = require("../components/room/roomDAL");
 const userDAL = require("../components/user/userDAL");
 const { TROPHY_RANGE } = require("../global/constant");
@@ -17,7 +18,8 @@ const {
   NEW_CONNECT,
   BECOME_PLAYER,
   UPDATE_CURRENT_PLAYER,
-  UPDATE_READY_STATUS
+  UPDATE_READY_STATUS,
+  START_GAME,
 } = require("./socket-event");
 
 let onlineUsers = [];
@@ -69,8 +71,8 @@ module.exports = (io, socket) => {
           const newRoom = {
             ...createdRoom._doc,
             xPlayer: matchingUsers[matchIndex],
-            oPlayer: { ...user, socketId: socket.id}
-          }
+            oPlayer: { ...user, socketId: socket.id },
+          };
           // listRoom.push(newRoom)
 
           socket.broadcast
@@ -98,23 +100,28 @@ module.exports = (io, socket) => {
   });
 
   socket.on(BECOME_PLAYER, async (data) => {
-    if (data.player === 'X') {
-      await roomDAL.updateXCurrentPlayer(data.roomId, data.user._id)
-    } else if (data.player === 'O') {
-      await roomDAL.updateOCurrentPlayer(data.roomId, data.user._id)
+    if (data.player === "X") {
+      await roomDAL.updateXCurrentPlayer(data.roomId, data.user._id);
+    } else if (data.player === "O") {
+      await roomDAL.updateOCurrentPlayer(data.roomId, data.user._id);
     }
-    io.emit(UPDATE_CURRENT_PLAYER, data)
-  })
+    io.emit(UPDATE_CURRENT_PLAYER, data);
+  });
 
   socket.on(UPDATE_READY_STATUS, async (data) => {
-    console.log(data)
-    if (data.player === 'X') {
-      await roomDAL.updateXPlayerReady(data.roomId, data.status)
-    } else if (data.player === 'O') {
-      await roomDAL.updateOPlayerReady(data.roomId, data.status)
+    if (data.xPlayerReady && data.oPlayerReady) {
+      await roomDAL.updateRoomStartGame(data.roomId);
+      const game = await gameDAL.insert(data.roomId, data.xCurrentPlayer, data.oCurrentPlayer)
+      io.emit(START_GAME, game)
+    } else {
+      if (data.player === "X") {
+        await roomDAL.updateXPlayerReady(data.roomId, data.xPlayerReady);
+      } else if (data.player === "O") {
+        await roomDAL.updateOPlayerReady(data.roomId, data.oPlayerReady);
+      }
+      io.to(data.roomId).emit(UPDATE_READY_STATUS, data);
     }
-    io.to(data.roomId).emit(UPDATE_READY_STATUS, data)
-  })
+  });
 
   //listening for creating room
   socket.on(CREATE_ROOM, async (data) => {

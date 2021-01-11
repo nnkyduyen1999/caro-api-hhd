@@ -2,6 +2,7 @@ const RoomDAL = require("./roomDAL");
 const UserDAL = require("../user/userDAL");
 const Room = require("./roomModel");
 const roomDAL = require("./roomDAL");
+const gameDAL = require("../game/gameDAL");
 
 module.exports = {
   allWithPlayerUsername: async (req, res, next) => {
@@ -61,6 +62,25 @@ module.exports = {
       const room = await Room.findById(roomId);
       if (room) {
         return res.status(200).json({ room });
+      }
+      return res.status(400).json({ message: "room not found" });
+    } catch (err) {
+      res.status(500).send(err);
+    }
+  },
+
+  getLatestGameInRoomById: async (req, res, next) => {
+    const roomId = req.params.id;
+    try {
+      const game = await gameDAL.getLatestGameInRoomById(roomId);
+      if (game) {
+        const gameInfo = {
+          game: { ...game._doc },
+          stepNumber: game.history.length - 1,
+          xIsNext: game.history.length - (1 % 2) === 0,
+          latestLocation: game.history[game.history.length - 1].location,
+        };
+        return res.status(200).send(gameInfo);
       }
       return res.status(400).json({ message: "room not found" });
     } catch (err) {

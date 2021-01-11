@@ -25,9 +25,11 @@ module.exports = {
 
   IN_WAITING: "inWaiting",
 
-  BECOME_PLAYER: 'becomePlayer',
+  BECOME_PLAYER: "becomePlayer",
 
-  UPDATE_CURRENT_PLAYER: 'updateCurrentPlayer',
+  UPDATE_CURRENT_PLAYER: "updateCurrentPlayer",
 
-  UPDATE_READY_STATUS: 'updateReadyStatus'
+  UPDATE_READY_STATUS: "updateReadyStatus",
+
+  START_GAME: "startGame",
 };

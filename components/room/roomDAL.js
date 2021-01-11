@@ -28,6 +28,10 @@ module.exports = {
     return Room.findByIdAndUpdate(roomId, { oPlayerReady: status })
   },
 
+  updateRoomStartGame: (roomId) => {
+    return Room.findByIdAndUpdate(roomId, { oPlayerReady: false, xPlayerReady: false, isPlaying: true })
+  },
+
 
 
   //------------------------------
