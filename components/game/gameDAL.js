@@ -17,4 +17,8 @@ module.exports = {
   getLatestGameInRoomById: (roomId) => {
     return Game.findOne({ roomId: roomId }, {}, { sort: { createdTime: -1 } });
   },
+
+  updateGameHistory: (gameId, newHistory) => {
+    return Game.findByIdAndUpdate(gameId, { $push: { history: newHistory } });
+  },
 };

@@ -76,9 +76,7 @@ module.exports = {
       if (game) {
         const gameInfo = {
           game: { ...game._doc },
-          stepNumber: game.history.length - 1,
-          xIsNext: game.history.length - (1 % 2) === 0,
-          latestLocation: game.history[game.history.length - 1].location,
+          xIsNext: game.history.length % 2 === 0,
         };
         return res.status(200).send(gameInfo);
       }

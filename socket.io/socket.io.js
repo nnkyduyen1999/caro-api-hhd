@@ -68,11 +68,11 @@ module.exports = (io, socket) => {
             user._id
           );
 
-          const newRoom = {
-            ...createdRoom._doc,
-            xPlayer: matchingUsers[matchIndex],
-            oPlayer: { ...user, socketId: socket.id },
-          };
+          // const newRoom = {
+          //   ...createdRoom._doc,
+          //   xPlayer: matchingUsers[matchIndex],
+          //   oPlayer: { ...user, socketId: socket.id },
+          // };
           // listRoom.push(newRoom)
 
           socket.broadcast
@@ -106,6 +106,7 @@ module.exports = (io, socket) => {
       await roomDAL.updateOCurrentPlayer(data.roomId, data.user._id);
     }
     io.emit(UPDATE_CURRENT_PLAYER, data);
+    console.log(data)
   });
 
   socket.on(UPDATE_READY_STATUS, async (data) => {
@@ -137,8 +138,8 @@ module.exports = (io, socket) => {
     socket.join(roomId);
   });
 
-  socket.on(REQUEST_MOVE, (data) => {
-    // console.log("req", data, data.roomId);
+  socket.on(REQUEST_MOVE, async (data) => {
+    await gameDAL.updateGameHistory(data.gameId, data.newHistory)
     io.to(data.roomId).emit(ACCEPT_MOVE, data);
   });
 
@@ -156,6 +157,7 @@ module.exports = (io, socket) => {
     const user = onlineUsers.find((item) => item.socketId === socket.id);
     if (user) {
       await userDAL.updateOnlineStatus(user.userId, false);
+      console.log('disconnect ', user)
     }
 
     const temp = onlineUsers.filter((item) => item.socketId !== socket.id);

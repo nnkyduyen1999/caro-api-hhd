@@ -22,8 +22,7 @@ const gameSchema = new Schema({
         default: Date.now
     },
     history: {
-        type: [],
-        default: [{ squares: Array(BOARD_SIZE * BOARD_SIZE).fill(null), location: null },]
+        type: []
     },
     winningLine: {
         type: []
