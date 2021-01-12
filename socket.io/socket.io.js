@@ -20,6 +20,7 @@ const {
   UPDATE_CURRENT_PLAYER,
   UPDATE_READY_STATUS,
   START_GAME,
+  SAVE_RESULT
 } = require("./socket-event");
 
 let onlineUsers = [];
@@ -106,15 +107,19 @@ module.exports = (io, socket) => {
       await roomDAL.updateOCurrentPlayer(data.roomId, data.user._id);
     }
     io.emit(UPDATE_CURRENT_PLAYER, data);
-    console.log(data)
+    console.log(data);
   });
 
   socket.on(UPDATE_READY_STATUS, async (data) => {
-    console.log(data)
+    console.log(data);
     if (data.xPlayerReady && data.oPlayerReady) {
       await roomDAL.updateRoomStartGame(data._id);
-      const game = await gameDAL.insert(data._id, data.xCurrentPlayer, data.oCurrentPlayer)
-      io.emit(START_GAME, game)
+      const game = await gameDAL.insert(
+        data._id,
+        data.xCurrentPlayer,
+        data.oCurrentPlayer
+      );
+      io.emit(START_GAME, game);
     } else {
       if (data.player === "X") {
         await roomDAL.updateXPlayerReady(data._id, data.xPlayerReady);
@@ -140,8 +145,14 @@ module.exports = (io, socket) => {
   });
 
   socket.on(REQUEST_MOVE, async (data) => {
-    await gameDAL.updateGameHistory(data.gameId, data.newHistory)
+    await gameDAL.updateGameHistory(data.gameId, data.newHistory);
     io.to(data.roomId).emit(ACCEPT_MOVE, data);
+  });
+
+  //save result
+  socket.on(SAVE_RESULT, async data => {
+    const savedGame = await gameDAL.updateGameResult(data);
+    console.log(savedGame);
   });
 
   // Listen for new messages
@@ -158,7 +169,7 @@ module.exports = (io, socket) => {
     const user = onlineUsers.find((item) => item.socketId === socket.id);
     if (user) {
       await userDAL.updateOnlineStatus(user.userId, false);
-      console.log('disconnect ', user)
+      console.log("disconnect ", user);
     }
 
     const temp = onlineUsers.filter((item) => item.socketId !== socket.id);

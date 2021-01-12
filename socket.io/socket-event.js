@@ -32,4 +32,7 @@ module.exports = {
   UPDATE_READY_STATUS: "updateReadyStatus",
 
   START_GAME: "startGame",
+
+  SAVE_RESULT: "saveResult",
+
 };

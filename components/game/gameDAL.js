@@ -10,8 +10,13 @@ module.exports = {
     return Game.create(game);
   },
 
-  updateGameResult: (gameId, winningLine, winner) => {
-    return;
+  updateGameResult: (data) => {
+    const {gameId, winningLine, isFinish, winner} = data;
+    return Game.findByIdAndUpdate(gameId, {
+      winningLine: winningLine,
+      isFinish: isFinish,
+      winner: winner
+    });
   },
 
   getLatestGameInRoomById: (roomId) => {
