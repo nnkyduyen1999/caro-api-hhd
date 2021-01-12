@@ -110,17 +110,18 @@ module.exports = (io, socket) => {
   });
 
   socket.on(UPDATE_READY_STATUS, async (data) => {
+    console.log(data)
     if (data.xPlayerReady && data.oPlayerReady) {
-      await roomDAL.updateRoomStartGame(data.roomId);
-      const game = await gameDAL.insert(data.roomId, data.xCurrentPlayer, data.oCurrentPlayer)
+      await roomDAL.updateRoomStartGame(data._id);
+      const game = await gameDAL.insert(data._id, data.xCurrentPlayer, data.oCurrentPlayer)
       io.emit(START_GAME, game)
     } else {
       if (data.player === "X") {
-        await roomDAL.updateXPlayerReady(data.roomId, data.xPlayerReady);
+        await roomDAL.updateXPlayerReady(data._id, data.xPlayerReady);
       } else if (data.player === "O") {
-        await roomDAL.updateOPlayerReady(data.roomId, data.oPlayerReady);
+        await roomDAL.updateOPlayerReady(data._id, data.oPlayerReady);
       }
-      io.to(data.roomId).emit(UPDATE_READY_STATUS, data);
+      io.to(data._id).emit(UPDATE_READY_STATUS, data);
     }
   });
 
