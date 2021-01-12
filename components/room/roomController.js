@@ -75,8 +75,8 @@ module.exports = {
       const game = await gameDAL.getLatestGameInRoomById(roomId);
       if (game) {
         const gameInfo = {
-          game: { ...game._doc },
-          xIsNext: game.history.length % 2 === 0,
+          ...game._doc,
+          xTurn: game.history.length % 2 === 0,
         };
         return res.status(200).send(gameInfo);
       }
