@@ -115,6 +115,10 @@ module.exports = {
     );
     if (!validPass) {
       return res.status(201).send({ errMsg: "Invalid password" });
+    } 
+
+    if (!existedUser.isValidate) {
+      return res.status(201).send({ errMsg: "This email is not validated yet."});
     }
 
     const token = jwt.sign({ _id: existedUser._id }, process.env.SECRET_TOKEN);

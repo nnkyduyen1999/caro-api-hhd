@@ -15,4 +15,8 @@ module.exports = {
   loadUsernameById: (id) => {
     return User.findById(id).select("username")
   },
+
+  getTopPlayersDAL: () => {
+    return User.find({}).sort({trophy: "desc"}).limit(10);
+  }
 };
