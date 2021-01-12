@@ -1,3 +1,4 @@
+const gameDAL = require("../components/game/gameDAL");
 const roomDAL = require("../components/room/roomDAL");
 const userDAL = require("../components/user/userDAL");
 const { TROPHY_RANGE } = require("../global/constant");
@@ -14,13 +15,18 @@ const {
   CREATE_ROOM,
   NEW_ROOM_CREATED,
   IN_WAITING,
-  NEW_CONNECT
+  NEW_CONNECT,
+  BECOME_PLAYER,
+  UPDATE_CURRENT_PLAYER,
+  UPDATE_READY_STATUS,
+  START_GAME,
 } = require("./socket-event");
 
 let onlineUsers = [];
 let matchingUsers = [];
 
 let createdRooms = [];
+// let listRoom = [];
 
 module.exports = (io, socket) => {
   //listen for new connection
@@ -49,14 +55,6 @@ module.exports = (io, socket) => {
       } else {
         //find matching users with same trophy range
         const matchIndex = matchingUsers.findIndex((item) => {
-          console.log(
-            item.trophy - TROPHY_RANGE,
-            user.trophy,
-            item.trophy + TROPHY_RANGE,
-            item.trophy,
-            TROPHY_RANGE
-          );
-
           return (
             item.trophy - TROPHY_RANGE <= user.trophy &&
             user.trophy <= item.trophy + TROPHY_RANGE
@@ -66,31 +64,63 @@ module.exports = (io, socket) => {
         if (matchIndex !== -1) {
           //create room
           const createdRoom = await roomDAL.insert(
-            matchingUsers[matchIndex].userId,
+            matchingUsers[matchIndex]._id,
             user._id
           );
+
+          // const newRoom = {
+          //   ...createdRoom._doc,
+          //   xPlayer: matchingUsers[matchIndex],
+          //   oPlayer: { ...user, socketId: socket.id },
+          // };
+          // listRoom.push(newRoom)
 
           socket.broadcast
             .to(matchingUsers[matchIndex].socketId)
             .emit(SUCCESSFULLY_MATCHED, createdRoom._id);
           socket.emit(SUCCESSFULLY_MATCHED, createdRoom._id);
 
+          io.emit(NEW_ROOM_CREATED);
+
           matchingUsers.splice(matchIndex, 1);
         } else {
           matchingUsers.push({
-            _id: user._id,
+            ...user,
             socketId: socket.id,
-            trophy: user.trophy,
           });
         }
       }
     } else {
       //there is no user matching yet
       matchingUsers.push({
-        _id: user._id,
+        ...user,
         socketId: socket.id,
-        trophy: user.trophy,
       });
+    }
+  });
+
+  socket.on(BECOME_PLAYER, async (data) => {
+    if (data.player === "X") {
+      await roomDAL.updateXCurrentPlayer(data.roomId, data.user._id);
+    } else if (data.player === "O") {
+      await roomDAL.updateOCurrentPlayer(data.roomId, data.user._id);
+    }
+    io.emit(UPDATE_CURRENT_PLAYER, data);
+    console.log(data)
+  });
+
+  socket.on(UPDATE_READY_STATUS, async (data) => {
+    if (data.xPlayerReady && data.oPlayerReady) {
+      await roomDAL.updateRoomStartGame(data.roomId);
+      const game = await gameDAL.insert(data.roomId, data.xCurrentPlayer, data.oCurrentPlayer)
+      io.emit(START_GAME, game)
+    } else {
+      if (data.player === "X") {
+        await roomDAL.updateXPlayerReady(data.roomId, data.xPlayerReady);
+      } else if (data.player === "O") {
+        await roomDAL.updateOPlayerReady(data.roomId, data.oPlayerReady);
+      }
+      io.to(data.roomId).emit(UPDATE_READY_STATUS, data);
     }
   });
 
@@ -108,8 +138,8 @@ module.exports = (io, socket) => {
     socket.join(roomId);
   });
 
-  socket.on(REQUEST_MOVE, (data) => {
-    // console.log("req", data, data.roomId);
+  socket.on(REQUEST_MOVE, async (data) => {
+    await gameDAL.updateGameHistory(data.gameId, data.newHistory)
     io.to(data.roomId).emit(ACCEPT_MOVE, data);
   });
 
@@ -127,6 +157,7 @@ module.exports = (io, socket) => {
     const user = onlineUsers.find((item) => item.socketId === socket.id);
     if (user) {
       await userDAL.updateOnlineStatus(user.userId, false);
+      console.log('disconnect ', user)
     }
 
     const temp = onlineUsers.filter((item) => item.socketId !== socket.id);

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { BOARD_SIZE } = require('../../global/constant')
 
 const Schema = mongoose.Schema;
 
@@ -21,7 +22,7 @@ const gameSchema = new Schema({
         default: Date.now
     },
     history: {
-        type: [],
+        type: []
     },
     winningLine: {
         type: []

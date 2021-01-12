@@ -5,13 +5,41 @@ module.exports = {
     return Room.find({})
   },
 
+  getRoomById: (id) => {
+    return Room.findOne(
+      { _id: id },
+      { password: 0 }
+    );
+  },
+
+  updateXCurrentPlayer: (roomId, xPlayerId) => {
+    return Room.findByIdAndUpdate(roomId, { xCurrentPlayer: xPlayerId })
+  },
+
+  updateOCurrentPlayer: (roomId, oPlayerId) => {
+    return Room.findByIdAndUpdate(roomId, { oCurrentPlayer: oPlayerId })
+  },
+
+  updateXPlayerReady: (roomId, status) => {
+    return Room.findByIdAndUpdate(roomId, { xPlayerReady: status })
+  },
+
+  updateOPlayerReady: (roomId, status) => {
+    return Room.findByIdAndUpdate(roomId, { oPlayerReady: status })
+  },
+
+  updateRoomStartGame: (roomId) => {
+    return Room.findByIdAndUpdate(roomId, { oPlayerReady: false, xPlayerReady: false, isPlaying: true })
+  },
+
+
 
   //------------------------------
   insert: async (userXId, userOId) => {
     try {
       const room = {
-        userXId: userXId,
-        userOId: userOId,
+        xCurrentPlayer: userXId,
+        oCurrentPlayer: userOId,
       };
       const createdRoom = await Room.create(room);
       return createdRoom;
