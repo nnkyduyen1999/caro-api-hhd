@@ -29,7 +29,8 @@ module.exports = {
           const xName = await UserDAL.loadUsernameById(game.xPlayer);
           const oName = await UserDAL.loadUsernameById(game.oPlayer);
           return {
-            roomId: game.roomId,
+            id: game._id,
+            // roomId: game.roomId,
             xPlayer: game.xPlayer,
             oPlayer: game.oPlayer,
             xUsername: xName ? xName.username : ``,

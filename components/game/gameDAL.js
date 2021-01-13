@@ -32,4 +32,6 @@ module.exports = {
       .or([{ xPlayer: userId }, { oPlayer: userId }])
       .and([{ isFinish: true }]);
   },
+
+
 };
