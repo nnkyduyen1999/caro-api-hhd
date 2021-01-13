@@ -11,11 +11,11 @@ module.exports = {
   },
 
   updateGameResult: (data) => {
-    const {gameId, winningLine, isFinish, winner} = data;
+    const { gameId, winningLine, isFinish, winner } = data;
     return Game.findByIdAndUpdate(gameId, {
       winningLine: winningLine,
       isFinish: isFinish,
-      winner: winner
+      winner: winner,
     });
   },
 
@@ -25,5 +25,9 @@ module.exports = {
 
   updateGameHistory: (gameId, newHistory) => {
     return Game.findByIdAndUpdate(gameId, { $push: { history: newHistory } });
+  },
+
+  getFinishedGamesByUserIdDAL: (userId) => {
+    return Game.find().or([{ xPlayer: userId }, { oPlayer: userId }]);
   },
 };
