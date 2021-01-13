@@ -20,19 +20,24 @@ module.exports = {
     return User.findById(id).select("trophy");
   },
 
-  updateWinnerById: async (id, bonusTrophy) => {
-    console.log("update winner");
+  updateWinnerById: (id, bonusTrophy) => {
     return User.findOneAndUpdate(
       { _id: id },
-      { $inc: { trophy: bonusTrophy } },
+      { $inc: { trophy: bonusTrophy, total: 1, winCount: 1} },
       {new: true}
     );
   },
-  updateLoserById: async (id, trophy) => {
-    console.log("update loser");
+  updateLoserById: (id, trophy) => {
     return User.findOneAndUpdate(
       { _id: id },
-      { $inc: { trophy: -trophy } },
+      { $inc: { trophy: -trophy, total: 1, loseCount: 1 } },
+      {new: true}
+    );
+  },
+  updateDrawById: (id) => {
+    return User.findOneAndUpdate(
+      { _id: id },
+      { $inc: { total: 1 } },
       {new: true}
     );
   },
@@ -40,4 +45,9 @@ module.exports = {
   getTopPlayersDAL: () => {
     return User.find({}).sort({ trophy: "desc" }).limit(10);
   },
+
+  getUserByIdDAL: (id) => {
+    return User.findById(id);
+  }
+
 };

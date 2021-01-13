@@ -26,4 +26,12 @@ module.exports = {
   updateGameHistory: (gameId, newHistory) => {
     return Game.findByIdAndUpdate(gameId, { $push: { history: newHistory } });
   },
+
+  getFinishedGamesByUserIdDAL: (userId) => {
+    return Game.find()
+      .or([{ xPlayer: userId }, { oPlayer: userId }])
+      .and([{ isFinish: true }]);
+  },
+
+
 };
