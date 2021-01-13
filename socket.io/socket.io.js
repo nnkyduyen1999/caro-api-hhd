@@ -20,7 +20,8 @@ const {
   UPDATE_CURRENT_PLAYER,
   UPDATE_READY_STATUS,
   START_GAME,
-  SAVE_RESULT
+  SAVE_RESULT,
+  SAVE_USER_SUCCESS,
 } = require("./socket-event");
 
 let onlineUsers = [];
@@ -106,7 +107,16 @@ module.exports = (io, socket) => {
     } else if (data.player === "O") {
       await roomDAL.updateOCurrentPlayer(data.roomId, data.user._id);
     }
-    io.emit(UPDATE_CURRENT_PLAYER, data);
+    const userTrophy = await userDAL.loadTrophyById(data.user._id);
+    const userHaveTrophy = {
+      ...data.user, 
+      trophy: userTrophy.trophy
+    };
+
+    io.emit(UPDATE_CURRENT_PLAYER, {
+      ...data,
+      user: userHaveTrophy
+    });
     console.log(data);
   });
 
@@ -150,9 +160,22 @@ module.exports = (io, socket) => {
   });
 
   //save result
-  socket.on(SAVE_RESULT, async data => {
+  socket.on(SAVE_RESULT, async (data) => {
     const savedGame = await gameDAL.updateGameResult(data);
     console.log(savedGame);
+    const { winner, bonusTrophy, xPlayer, oPlayer } = data;
+    let updatedUser = null;
+    if (winner === `X`) {
+   updatedUser = await userDAL.updateTrophyById(xPlayer, bonusTrophy);
+    } else if (winner === `O`) {
+      updatedUser = await userDAL.updateTrophyById(oPlayer, bonusTrophy);
+    }
+    console.log(updatedUser);
+    if (updatedUser) {
+      socket.emit(SAVE_USER_SUCCESS, {
+        updatedTrophy: updatedUser.trophy,
+      });
+    }
   });
 
   // Listen for new messages

@@ -13,10 +13,29 @@ module.exports = {
   },
 
   loadUsernameById: (id) => {
-    return User.findById(id).select("username")
+    return User.findById(id, {username: 1, trophy: 1});
+  },
+
+  loadTrophyById: (id) => {
+    return User.findById(id).select("trophy");
+  },
+
+  updateTrophyById: async (id, bonusTrophy) => {
+    // console.log(bonusTrophy, id);
+    // const user = await User.findOneAndUpdate({_id: id}, { $inc: { trophy: bonusTrophy } }, (err) => {
+    //   console.log(err)
+    // });
+    // console.log("user",user);
+    return User.findOneAndUpdate(
+      { _id: id },
+      { $inc: { trophy: bonusTrophy } },
+      (err) => {
+        console.log(err);
+      }
+    );
   },
 
   getTopPlayersDAL: () => {
-    return User.find({}).sort({trophy: "desc"}).limit(10);
-  }
+    return User.find({}).sort({ trophy: "desc" }).limit(10);
+  },
 };

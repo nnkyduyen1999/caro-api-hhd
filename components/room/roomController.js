@@ -36,6 +36,7 @@ module.exports = {
       const room = await roomDAL.getRoomById(roomId);
 
       if (room) {
+        console.log("room", room);
         const xPlayer = room.xCurrentPlayer
           ? await UserDAL.loadUsernameById(room.xCurrentPlayer)
           : "";
@@ -43,10 +44,15 @@ module.exports = {
           ? await UserDAL.loadUsernameById(room.oCurrentPlayer)
           : "";
 
+          console.log("o trp",oPlayer);
+          console.log("x trp",xPlayer);
+
         return res.status(200).send({
           ...room._doc,
           xPlayerUsername: xPlayer ? xPlayer.username : "",
           oPlayerUsername: oPlayer ? oPlayer.username : "",
+          xPlayerTrophy: xPlayer ? xPlayer.trophy : 0,
+          oPlayerTrophy: oPlayer ? oPlayer.trophy : 0
         });
       }
       return res.status(400).json({ message: "room not found" });
@@ -78,6 +84,7 @@ module.exports = {
           ...game._doc,
           xTurn: game.history.length % 2 === 0,
         };
+        console.log(gameInfo)
         return res.status(200).send(gameInfo);
       }
       return res.status(400).json({ message: "room not found" });

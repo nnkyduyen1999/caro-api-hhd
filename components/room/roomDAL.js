@@ -2,7 +2,7 @@ const Room = require("./roomModel");
 
 module.exports = {
   all: () => {
-    return Room.find({})
+    return Room.find({}).sort({createTime: "desc"})
   },
 
   getRoomById: (id) => {

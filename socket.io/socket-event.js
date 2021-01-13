@@ -35,4 +35,6 @@ module.exports = {
 
   SAVE_RESULT: "saveResult",
 
+  SAVE_USER_SUCCESS: "saveUserSuccess"
+
 };
