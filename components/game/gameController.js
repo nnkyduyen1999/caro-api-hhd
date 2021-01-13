@@ -24,16 +24,19 @@ module.exports = {
       history.push({
         squares: Array(BOARD_SIZE * BOARD_SIZE).fill(null),
         location: null,
+        messages: []
       });
 
       for (const item of game.history) {
         const curr = { squares: [...history[history.length - 1].squares], location: null }
         curr.squares[item.location] = item.player
         curr.location = item.location
-
-        history.push({squares: [...curr.squares], location: curr.location})
+        curr.messages = item.messages
+        history.push({squares: [...curr.squares], location: curr.location, messages: [...curr.messages]})
       }
-    
+
+      // console.log(history);
+
       res.status(200).send({
         ...game._doc,
         xPlayerUsername: xPlayer ? xPlayer.username : '',
@@ -44,6 +47,6 @@ module.exports = {
       res.send(err)
     }
 
-    
+
   },
 };
