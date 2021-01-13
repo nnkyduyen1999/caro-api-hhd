@@ -117,11 +117,11 @@ module.exports = (io, socket) => {
       ...data,
       user: userHaveTrophy,
     });
-    console.log(data);
+    // console.log(data);
   });
 
   socket.on(UPDATE_READY_STATUS, async (data) => {
-    console.log(data);
+    console.log('update-ready data', data);
     if (data.xPlayerReady && data.oPlayerReady) {
       await roomDAL.updateRoomStartGame(data._id);
       const game = await gameDAL.insert(
@@ -130,7 +130,13 @@ module.exports = (io, socket) => {
         data.oCurrentPlayer
       );
       console.log('newgame',game)
-      io.emit(START_GAME, game);
+      let newRoomInfo = {...data}
+      delete newRoomInfo.player;
+      newRoomInfo.isPlaying = true
+      newRoomInfo.xPlayerReady = false
+      newRoomInfo.oPlayerReady = false
+      console.log('newRoomInfo',newRoomInfo)
+      io.emit(START_GAME, {roomInfo: newRoomInfo, game});
     } else {
       if (data.player === "X") {
         await roomDAL.updateXPlayerReady(data._id, data.xPlayerReady);
@@ -163,7 +169,7 @@ module.exports = (io, socket) => {
   //save result
   socket.on(SAVE_RESULT, async (data) => {
     const savedGame = await gameDAL.updateGameResult(data);
-    console.log(savedGame);
+    // console.log(savedGame);
 
     const {roomId} = data;
     const savedRoom = await roomDAL.updateRoomResult(roomId);
@@ -182,7 +188,7 @@ module.exports = (io, socket) => {
       await userDAL.updateDrawById(oPlayer);
     }
 
-    console.log("result", updatedWinner, updatedLoser);
+    // console.log("result", updatedWinner, updatedLoser);
     io.emit(SAVE_USER_SUCCESS, {
       updatedWinner: updatedWinner.trophy,
       updatedLoser: updatedLoser.trophy,
@@ -197,7 +203,7 @@ module.exports = (io, socket) => {
   });
 
   socket.on(GIVEN_IN_EVENT, async (data) => {
-    console.log("req", data);
+    // console.log("req", data);
     io.in(data.game.roomId).emit(GIVEN_IN_EVENT, data);
     const savedGame = await gameDAL.updateGameResult(data);
 
@@ -215,7 +221,7 @@ module.exports = (io, socket) => {
       updatedLoser = await userDAL.updateLoserById(xPlayer, DECREASE_TROPHY);
     }
 
-    console.log("result", updatedWinner, updatedLoser);
+    // console.log("result", updatedWinner, updatedLoser);
     io.emit(SAVE_USER_SUCCESS, {
       updatedWinner: updatedWinner.trophy,
       updatedLoser: updatedLoser.trophy,
