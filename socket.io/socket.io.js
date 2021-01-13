@@ -176,7 +176,7 @@ module.exports = (io, socket) => {
       updatedLoser = await userDAL.updateLoserById(oPlayer, DECREASE_TROPHY);
     } else if (winner === `O`) {
       updatedWinner = await userDAL.updateWinnerById(oPlayer, BONUS_TROPHY);
-      updateLoser = await userDAL.updateLoserById(xPlayer, DECREASE_TROPHY);
+      updatedLoser = await userDAL.updateLoserById(xPlayer, DECREASE_TROPHY);
     }
 
     console.log("result", updatedWinner, updatedLoser);
@@ -193,9 +193,32 @@ module.exports = (io, socket) => {
     io.in(data.roomId).emit(NEW_CHAT_MESSAGE_EVENT, data);
   });
 
-  socket.on(GIVEN_IN_EVENT, (data) => {
+  socket.on(GIVEN_IN_EVENT, async (data) => {
     console.log("req", data);
-    io.in(data.roomId).emit(GIVEN_IN_EVENT, data);
+    io.in(data.game.roomId).emit(GIVEN_IN_EVENT, data);
+    const savedGame = await gameDAL.updateGameResult(data);
+
+    const {roomId} = data.game.roomId;
+    const savedRoom = await roomDAL.updateRoomResult(roomId);
+
+    const {xPlayer, oPlayer } = data.game;
+    let updatedWinner = null;
+    let updatedLoser = null;
+    if (data.winner === `X`) {
+      updatedWinner = await userDAL.updateWinnerById(xPlayer, BONUS_TROPHY);
+      updatedLoser = await userDAL.updateLoserById(oPlayer, DECREASE_TROPHY);
+    } else if (data.winner === `O`) {
+      updatedWinner = await userDAL.updateWinnerById(oPlayer, BONUS_TROPHY);
+      updatedLoser = await userDAL.updateLoserById(xPlayer, DECREASE_TROPHY);
+    }
+
+    console.log("result", updatedWinner, updatedLoser);
+    io.emit(SAVE_USER_SUCCESS, {
+      updatedWinner: updatedWinner.trophy,
+      updatedLoser: updatedLoser.trophy,
+      winner: data.winner,
+      roomId: roomId
+    });
   });
 
   socket.on(DISCONNECT, async () => {
