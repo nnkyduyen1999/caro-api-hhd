@@ -28,6 +28,8 @@ module.exports = {
   },
 
   getFinishedGamesByUserIdDAL: (userId) => {
-    return Game.find().or([{ xPlayer: userId }, { oPlayer: userId }]);
+    return Game.find()
+      .or([{ xPlayer: userId }, { oPlayer: userId }])
+      .and([{ isFinish: true }]);
   },
 };
