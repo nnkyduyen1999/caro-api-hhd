@@ -20,18 +20,20 @@ module.exports = {
     return User.findById(id).select("trophy");
   },
 
-  updateTrophyById: async (id, bonusTrophy) => {
-    // console.log(bonusTrophy, id);
-    // const user = await User.findOneAndUpdate({_id: id}, { $inc: { trophy: bonusTrophy } }, (err) => {
-    //   console.log(err)
-    // });
-    // console.log("user",user);
+  updateWinnerById: async (id, bonusTrophy) => {
+    console.log("update winner");
     return User.findOneAndUpdate(
       { _id: id },
       { $inc: { trophy: bonusTrophy } },
-      (err) => {
-        console.log(err);
-      }
+      {new: true}
+    );
+  },
+  updateLoserById: async (id, trophy) => {
+    console.log("update loser");
+    return User.findOneAndUpdate(
+      { _id: id },
+      { $inc: { trophy: -trophy } },
+      {new: true}
     );
   },
 

@@ -2,37 +2,40 @@ const Room = require("./roomModel");
 
 module.exports = {
   all: () => {
-    return Room.find({}).sort({createTime: "desc"})
+    return Room.find({}).sort({ createTime: "desc" });
   },
 
   getRoomById: (id) => {
-    return Room.findOne(
-      { _id: id },
-      { password: 0 }
-    );
+    return Room.findOne({ _id: id }, { password: 0 });
   },
 
   updateXCurrentPlayer: (roomId, xPlayerId) => {
-    return Room.findByIdAndUpdate(roomId, { xCurrentPlayer: xPlayerId })
+    return Room.findByIdAndUpdate(roomId, { xCurrentPlayer: xPlayerId });
   },
 
   updateOCurrentPlayer: (roomId, oPlayerId) => {
-    return Room.findByIdAndUpdate(roomId, { oCurrentPlayer: oPlayerId })
+    return Room.findByIdAndUpdate(roomId, { oCurrentPlayer: oPlayerId });
   },
 
   updateXPlayerReady: (roomId, status) => {
-    return Room.findByIdAndUpdate(roomId, { xPlayerReady: status })
+    return Room.findByIdAndUpdate(roomId, { xPlayerReady: status });
   },
 
   updateOPlayerReady: (roomId, status) => {
-    return Room.findByIdAndUpdate(roomId, { oPlayerReady: status })
+    return Room.findByIdAndUpdate(roomId, { oPlayerReady: status });
   },
 
   updateRoomStartGame: (roomId) => {
-    return Room.findByIdAndUpdate(roomId, { oPlayerReady: false, xPlayerReady: false, isPlaying: true })
+    return Room.findByIdAndUpdate(roomId, {
+      oPlayerReady: false,
+      xPlayerReady: false,
+      isPlaying: true,
+    });
   },
 
-
+  updateRoomResult: (roomId) => {
+    return Room.findByIdAndUpdate(roomId, { isPlaying: false });
+  },
 
   //------------------------------
   insert: async (userXId, userOId) => {
@@ -54,13 +57,13 @@ module.exports = {
         password: dataFromSocket.password,
         timeStep: dataFromSocket.timeStep,
         xCurrentPlayer: dataFromSocket.userId,
-        isPlaying: false
-      }
+        isPlaying: false,
+      };
       return await Room.create(room);
     } catch (err) {
       return { message: err.message };
     }
-  }, 
+  },
 
   // testRoom: async (req, res, next) => {
   //   try {

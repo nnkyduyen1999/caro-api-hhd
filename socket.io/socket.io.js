@@ -1,7 +1,7 @@
 const gameDAL = require("../components/game/gameDAL");
 const roomDAL = require("../components/room/roomDAL");
 const userDAL = require("../components/user/userDAL");
-const { TROPHY_RANGE } = require("../global/constant");
+const { TROPHY_RANGE, BONUS_TROPHY, DECREASE_TROPHY } = require("../global/constant");
 const {
   UPDATE_ONLINE_USERS,
   GIVEN_IN_EVENT,
@@ -109,13 +109,13 @@ module.exports = (io, socket) => {
     }
     const userTrophy = await userDAL.loadTrophyById(data.user._id);
     const userHaveTrophy = {
-      ...data.user, 
-      trophy: userTrophy.trophy
+      ...data.user,
+      trophy: userTrophy.trophy,
     };
 
     io.emit(UPDATE_CURRENT_PLAYER, {
       ...data,
-      user: userHaveTrophy
+      user: userHaveTrophy,
     });
     console.log(data);
   });
@@ -163,19 +163,28 @@ module.exports = (io, socket) => {
   socket.on(SAVE_RESULT, async (data) => {
     const savedGame = await gameDAL.updateGameResult(data);
     console.log(savedGame);
-    const { winner, bonusTrophy, xPlayer, oPlayer } = data;
-    let updatedUser = null;
+
+    const {roomId} = data;
+    const savedRoom = await roomDAL.updateRoomResult(roomId);
+
+    const { winner, xPlayer, oPlayer } = data;
+    let updatedWinner = null;
+    let updatedLoser = null;
     if (winner === `X`) {
-   updatedUser = await userDAL.updateTrophyById(xPlayer, bonusTrophy);
+      updatedWinner = await userDAL.updateWinnerById(xPlayer, BONUS_TROPHY);
+      updatedLoser = await userDAL.updateLoserById(oPlayer, DECREASE_TROPHY);
     } else if (winner === `O`) {
-      updatedUser = await userDAL.updateTrophyById(oPlayer, bonusTrophy);
+      updatedWinner = await userDAL.updateWinnerById(oPlayer, BONUS_TROPHY);
+      updateLoser = await userDAL.updateLoserById(xPlayer, DECREASE_TROPHY);
     }
-    console.log(updatedUser);
-    if (updatedUser) {
-      socket.emit(SAVE_USER_SUCCESS, {
-        updatedTrophy: updatedUser.trophy,
-      });
-    }
+
+    console.log("result", updatedWinner, updatedLoser);
+    socket.emit(SAVE_USER_SUCCESS, {
+      updatedWinner: updatedWinner.trophy,
+      updatedLoser: updatedLoser.trophy,
+      winner: winner,
+      roomId: roomId
+    });
   });
 
   // Listen for new messages

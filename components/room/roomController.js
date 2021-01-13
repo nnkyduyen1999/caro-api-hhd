@@ -44,9 +44,7 @@ module.exports = {
           ? await UserDAL.loadUsernameById(room.oCurrentPlayer)
           : "";
 
-          console.log("o trp",oPlayer);
-          console.log("x trp",xPlayer);
-
+        
         return res.status(200).send({
           ...room._doc,
           xPlayerUsername: xPlayer ? xPlayer.username : "",
