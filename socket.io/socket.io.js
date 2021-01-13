@@ -177,6 +177,9 @@ module.exports = (io, socket) => {
     } else if (winner === `O`) {
       updatedWinner = await userDAL.updateWinnerById(oPlayer, BONUS_TROPHY);
       updateLoser = await userDAL.updateLoserById(xPlayer, DECREASE_TROPHY);
+    } else if (winner === "draw") {
+      await userDAL.updateDrawById(xPlayer);
+      await userDAL.updateDrawById(oPlayer);
     }
 
     console.log("result", updatedWinner, updatedLoser);

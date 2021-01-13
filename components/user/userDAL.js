@@ -23,14 +23,21 @@ module.exports = {
   updateWinnerById: (id, bonusTrophy) => {
     return User.findOneAndUpdate(
       { _id: id },
-      { $inc: { trophy: bonusTrophy } },
+      { $inc: { trophy: bonusTrophy, total: 1, winCount: 1} },
       {new: true}
     );
   },
   updateLoserById: (id, trophy) => {
     return User.findOneAndUpdate(
       { _id: id },
-      { $inc: { trophy: -trophy } },
+      { $inc: { trophy: -trophy, total: 1, loseCount: 1 } },
+      {new: true}
+    );
+  },
+  updateDrawById: (id) => {
+    return User.findOneAndUpdate(
+      { _id: id },
+      { $inc: { total: 1 } },
       {new: true}
     );
   },
