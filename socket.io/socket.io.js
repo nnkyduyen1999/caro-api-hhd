@@ -129,6 +129,7 @@ module.exports = (io, socket) => {
         data.xCurrentPlayer,
         data.oCurrentPlayer
       );
+      console.log('newgame',game)
       io.emit(START_GAME, game);
     } else {
       if (data.player === "X") {
@@ -179,7 +180,7 @@ module.exports = (io, socket) => {
     }
 
     console.log("result", updatedWinner, updatedLoser);
-    socket.emit(SAVE_USER_SUCCESS, {
+    io.emit(SAVE_USER_SUCCESS, {
       updatedWinner: updatedWinner.trophy,
       updatedLoser: updatedLoser.trophy,
       winner: winner,

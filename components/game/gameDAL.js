@@ -11,16 +11,16 @@ module.exports = {
   },
 
   updateGameResult: (data) => {
-    const {gameId, winningLine, isFinish, winner} = data;
+    const {gameId, winningLine, winner} = data;
     return Game.findByIdAndUpdate(gameId, {
       winningLine: winningLine,
-      isFinish: isFinish,
+      isFinish: true,
       winner: winner
     });
   },
 
   getLatestGameInRoomById: (roomId) => {
-    return Game.findOne({ roomId: roomId }, {}, { sort: { createdTime: -1 } });
+    return Game.findOne({ roomId: roomId }, {}, { sort: { createTime: -1 }});
   },
 
   updateGameHistory: (gameId, newHistory) => {

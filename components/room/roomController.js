@@ -44,7 +44,7 @@ module.exports = {
           ? await UserDAL.loadUsernameById(room.oCurrentPlayer)
           : "";
 
-        
+
         return res.status(200).send({
           ...room._doc,
           xPlayerUsername: xPlayer ? xPlayer.username : "",
@@ -77,16 +77,19 @@ module.exports = {
     const roomId = req.params.id;
     try {
       const game = await gameDAL.getLatestGameInRoomById(roomId);
+      console.log('lasted game',game)
       if (game) {
+        // if(game.isFinish)
+        //   return
         const gameInfo = {
           ...game._doc,
           xTurn: game.history.length % 2 === 0,
         };
-        console.log(gameInfo)
         return res.status(200).send(gameInfo);
       }
       return res.status(400).json({ message: "room not found" });
     } catch (err) {
+      console.log(err)
       res.status(500).send(err);
     }
   },
