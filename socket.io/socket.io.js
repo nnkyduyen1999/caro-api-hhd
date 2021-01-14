@@ -264,6 +264,9 @@ module.exports = (io, socket) => {
 
     const temp = onlineUsers.filter((item) => item.socketId !== socket.id);
     onlineUsers = [...temp];
+
+    const tempMatching = matchingUsers.filter((item) => item.socketId !== socket.id);
+    matchingUsers = [...tempMatching]
     io.emit(UPDATE_ONLINE_USERS);
 
     // Leave the room if the user closes the socket
