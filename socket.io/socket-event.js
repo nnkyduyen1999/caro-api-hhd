@@ -35,6 +35,7 @@ module.exports = {
 
   SAVE_RESULT: "saveResult",
 
-  SAVE_USER_SUCCESS: "saveUserSuccess"
+  SAVE_USER_SUCCESS: "saveUserSuccess",
 
+  EXIT_ROOM: "exitRoom",
 };

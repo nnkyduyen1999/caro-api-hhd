@@ -1,7 +1,11 @@
 const gameDAL = require("../components/game/gameDAL");
 const roomDAL = require("../components/room/roomDAL");
 const userDAL = require("../components/user/userDAL");
-const { TROPHY_RANGE, BONUS_TROPHY, DECREASE_TROPHY } = require("../global/constant");
+const {
+  TROPHY_RANGE,
+  BONUS_TROPHY,
+  DECREASE_TROPHY,
+} = require("../global/constant");
 const {
   UPDATE_ONLINE_USERS,
   GIVEN_IN_EVENT,
@@ -22,6 +26,7 @@ const {
   START_GAME,
   SAVE_RESULT,
   SAVE_USER_SUCCESS,
+  EXIT_ROOM,
 } = require("./socket-event");
 
 let onlineUsers = [];
@@ -121,7 +126,7 @@ module.exports = (io, socket) => {
   });
 
   socket.on(UPDATE_READY_STATUS, async (data) => {
-    console.log('update-ready data', data);
+    console.log("update-ready data", data);
     if (data.xPlayerReady && data.oPlayerReady) {
       await roomDAL.updateRoomStartGame(data._id);
       const game = await gameDAL.insert(
@@ -129,14 +134,14 @@ module.exports = (io, socket) => {
         data.xCurrentPlayer,
         data.oCurrentPlayer
       );
-      console.log('newgame',game)
-      let newRoomInfo = {...data}
+      console.log("newgame", game);
+      let newRoomInfo = { ...data };
       delete newRoomInfo.player;
-      newRoomInfo.isPlaying = true
-      newRoomInfo.xPlayerReady = false
-      newRoomInfo.oPlayerReady = false
-      console.log('newRoomInfo',newRoomInfo)
-      io.emit(START_GAME, {roomInfo: newRoomInfo, game});
+      newRoomInfo.isPlaying = true;
+      newRoomInfo.xPlayerReady = false;
+      newRoomInfo.oPlayerReady = false;
+      console.log("newRoomInfo", newRoomInfo);
+      io.emit(START_GAME, { roomInfo: newRoomInfo, game });
     } else {
       if (data.player === "X") {
         await roomDAL.updateXPlayerReady(data._id, data.xPlayerReady);
@@ -171,7 +176,7 @@ module.exports = (io, socket) => {
     const savedGame = await gameDAL.updateGameResult(data);
     // console.log(savedGame);
 
-    const {roomId} = data;
+    const { roomId } = data;
     const savedRoom = await roomDAL.updateRoomResult(roomId);
 
     const { winner, xPlayer, oPlayer } = data;
@@ -193,7 +198,7 @@ module.exports = (io, socket) => {
       updatedWinner: updatedWinner.trophy,
       updatedLoser: updatedLoser.trophy,
       winner: winner,
-      roomId: roomId
+      roomId: roomId,
     });
   });
 
@@ -207,10 +212,10 @@ module.exports = (io, socket) => {
     io.in(data.game.roomId).emit(GIVEN_IN_EVENT, data);
     const savedGame = await gameDAL.updateGameResult(data);
 
-    const {roomId} = data.game.roomId;
+    const { roomId } = data.game.roomId;
     const savedRoom = await roomDAL.updateRoomResult(roomId);
 
-    const {xPlayer, oPlayer } = data.game;
+    const { xPlayer, oPlayer } = data.game;
     let updatedWinner = null;
     let updatedLoser = null;
     if (data.winner === `X`) {
@@ -226,8 +231,28 @@ module.exports = (io, socket) => {
       updatedWinner: updatedWinner.trophy,
       updatedLoser: updatedLoser.trophy,
       winner: data.winner,
-      roomId: roomId
+      roomId: roomId,
     });
+  });
+
+  socket.on(EXIT_ROOM, async (data) => {
+    if (!data.player) {
+      //guest leave room
+      socket.leave(data.roomId);
+    } else {
+      //curr player leave room
+
+      if (data.player === "X") {
+        await roomDAL.updateXCurrentPlayer(data.roomId, null);
+      } else if (data.player === "O") {
+        await roomDAL.updateOCurrentPlayer(data.roomId, null);
+      }
+
+      io.emit(UPDATE_CURRENT_PLAYER, {
+        ...data,
+        user: { _id: null, username: null, trophy: 0 },
+      });
+    }
   });
 
   socket.on(DISCONNECT, async () => {
