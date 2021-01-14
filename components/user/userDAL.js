@@ -43,7 +43,7 @@ module.exports = {
   },
 
   getTopPlayersDAL: () => {
-    return User.find({}).sort({ trophy: "desc" }).limit(10);
+    return User.find({isAdmin: false}).sort({ trophy: "desc" }).limit(10);
   },
 
   getUserByIdDAL: (id) => {
