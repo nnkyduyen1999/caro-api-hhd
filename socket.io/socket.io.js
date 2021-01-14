@@ -105,22 +105,26 @@ module.exports = (io, socket) => {
   });
 
   socket.on(BECOME_PLAYER, async (data) => {
+    const userTrophy = await userDAL.loadTrophyById(data.user._id);
+    let newRoomInfo = { ...data.roomInfo };
     if (data.player === "X") {
       await roomDAL.updateXCurrentPlayer(data.roomId, data.user._id);
+      newRoomInfo.xCurrentPlayer = data.user._id;
+      newRoomInfo.xPlayerUsername = data.user.username;
+      newRoomInfo.xPlayerTrophy = userTrophy.trophy;
+      newRoomInfo.xPlayerReady = false;
     } else if (data.player === "O") {
       await roomDAL.updateOCurrentPlayer(data.roomId, data.user._id);
+      newRoomInfo.oCurrentPlayer = data.user._id;
+      newRoomInfo.oPlayerUsername = data.user.username;
+      newRoomInfo.oPlayerTrophy = userTrophy.trophy;
+      newRoomInfo.oPlayerReady = false;
     }
-    const userTrophy = await userDAL.loadTrophyById(data.user._id);
-    const userHaveTrophy = {
-      ...data.user,
-      trophy: userTrophy.trophy,
-    };
 
     io.emit(UPDATE_CURRENT_PLAYER, {
       ...data,
-      user: userHaveTrophy,
+      roomInfo: newRoomInfo,
     });
-    // console.log(data);
   });
 
   socket.on(UPDATE_READY_STATUS, async (data) => {
@@ -138,7 +142,6 @@ module.exports = (io, socket) => {
       newRoomInfo.isPlaying = true;
       newRoomInfo.xPlayerReady = false;
       newRoomInfo.oPlayerReady = false;
-      console.log("newRoomInfo", newRoomInfo);
       io.emit(START_GAME, { roomInfo: newRoomInfo, game });
     } else {
       if (data.player === "X") {
@@ -234,23 +237,28 @@ module.exports = (io, socket) => {
   });
 
   socket.on(EXIT_ROOM, async (data) => {
-    if (!data.player) {
-      //guest leave room
-      socket.leave(data.roomId);
-    } else {
-      //curr player leave room
-
+    let newRoomInfo = { ...data.roomInfo };
+    if (data.player) {
       if (data.player === "X") {
         await roomDAL.updateXCurrentPlayer(data.roomId, null);
+        newRoomInfo.xCurrentPlayer = null;
+        newRoomInfo.xPlayerUsername = null;
+        newRoomInfo.xPlayerTrophy = 0;
+        newRoomInfo.xPlayerReady = false;
       } else if (data.player === "O") {
         await roomDAL.updateOCurrentPlayer(data.roomId, null);
+        newRoomInfo.oCurrentPlayer = null;
+        newRoomInfo.oPlayerUsername = null;
+        newRoomInfo.oPlayerTrophy = 0;
+        newRoomInfo.oPlayerReady = false;
       }
 
       io.emit(UPDATE_CURRENT_PLAYER, {
         ...data,
-        user: { _id: null, username: null, trophy: 0 },
+        roomInfo: newRoomInfo,
       });
     }
+    socket.leave(data.roomId);
   });
 
   socket.on(DISCONNECT, async () => {
@@ -268,8 +276,5 @@ module.exports = (io, socket) => {
     );
     matchingUsers = [...tempMatching];
     io.emit(UPDATE_ONLINE_USERS);
-
-    // Leave the room if the user closes the socket
-    // socket.leave(roomId);
   });
 };
