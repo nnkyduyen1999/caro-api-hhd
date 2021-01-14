@@ -49,6 +49,9 @@ module.exports = (io, socket) => {
   });
 
   socket.on(MATCHING, async (user) => {
+    const userWithTrophy = await userDAL.loadTrophyById(user._id);
+    console.log(userWithTrophy);
+
     if (matchingUsers.length >= 1) {
       //there are users matching before
 
@@ -63,8 +66,8 @@ module.exports = (io, socket) => {
         //find matching users with same trophy range
         const matchIndex = matchingUsers.findIndex((item) => {
           return (
-            item.trophy - TROPHY_RANGE <= user.trophy &&
-            user.trophy <= item.trophy + TROPHY_RANGE
+            item.trophy - TROPHY_RANGE <= userWithTrophy.trophy &&
+            userWithTrophy.trophy <= item.trophy + TROPHY_RANGE
           );
         });
 
@@ -74,13 +77,6 @@ module.exports = (io, socket) => {
             matchingUsers[matchIndex]._id,
             user._id
           );
-
-          // const newRoom = {
-          //   ...createdRoom._doc,
-          //   xPlayer: matchingUsers[matchIndex],
-          //   oPlayer: { ...user, socketId: socket.id },
-          // };
-          // listRoom.push(newRoom)
 
           socket.broadcast
             .to(matchingUsers[matchIndex].socketId)
@@ -93,6 +89,7 @@ module.exports = (io, socket) => {
         } else {
           matchingUsers.push({
             ...user,
+            trophy: userWithTrophy.trophy,
             socketId: socket.id,
           });
         }
@@ -101,6 +98,7 @@ module.exports = (io, socket) => {
       //there is no user matching yet
       matchingUsers.push({
         ...user,
+        trophy: userWithTrophy.trophy,
         socketId: socket.id,
       });
     }
@@ -265,8 +263,10 @@ module.exports = (io, socket) => {
     const temp = onlineUsers.filter((item) => item.socketId !== socket.id);
     onlineUsers = [...temp];
 
-    const tempMatching = matchingUsers.filter((item) => item.socketId !== socket.id);
-    matchingUsers = [...tempMatching]
+    const tempMatching = matchingUsers.filter(
+      (item) => item.socketId !== socket.id
+    );
+    matchingUsers = [...tempMatching];
     io.emit(UPDATE_ONLINE_USERS);
 
     // Leave the room if the user closes the socket
